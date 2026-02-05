@@ -2,17 +2,20 @@
 """
 Lens Cover Generator - Creates press-fit translucent lens covers for light slots.
 
-Generates a STEP file for a lens cover with an outer flange (lip) and insert body
+Generates STEP files for lens covers with an outer flange (lip) and insert body
 that press-fits into the light slots cut in the Apollo R-PRO-1 case.
 
-Usage:
-    python create_lens.py [output.step]
+Produces two variants:
+  - loose: 0.1mm clearance per side (sliding fit)
+  - press: -0.04mm clearance per side (interference fit for 100.7% XY scale)
 
-Default output: ../apollo-r-pro-1-case/r_pro-1_lens_cover.step
+Usage:
+    python create_lens.py
+
+Output: ../apollo-r-pro-1-case/r_pro-1_lens_cover_{loose,press}.step
 """
 
 import os
-import sys
 
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Fuse
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
@@ -27,8 +30,11 @@ from OCP.Bnd import Bnd_Box
 SLOT_WIDTH = 40.0   # mm
 SLOT_HEIGHT = 10.0   # mm
 
-# Clearance per side for the insert (adjust if fit is too tight/loose)
-CLEARANCE = 0.1     # mm per side
+# Lens cover variants: (suffix, clearance_mm_per_side)
+VARIANTS = [
+    ("loose", 0.1),     # sliding fit
+    ("press", -0.04),   # interference fit for 100.7% XY scale
+]
 
 # Flange (outer lip) overhang per side
 FLANGE_LIP = 1.0    # mm per side
@@ -38,7 +44,7 @@ FLANGE_THICKNESS = 0.8   # mm - thin for light transmission
 INSERT_DEPTH = 2.0       # mm - how far insert goes into slot
 
 
-def create_lens_cover():
+def create_lens_cover(clearance):
     """
     Create a lens cover shape with flange + insert body.
 
@@ -49,8 +55,8 @@ def create_lens_cover():
     Returns the fused shape.
     """
     # Insert body dimensions (with clearance)
-    insert_w = SLOT_WIDTH - 2 * CLEARANCE
-    insert_h = SLOT_HEIGHT - 2 * CLEARANCE
+    insert_w = SLOT_WIDTH - 2 * clearance
+    insert_h = SLOT_HEIGHT - 2 * clearance
 
     # Flange dimensions
     flange_w = SLOT_WIDTH + 2 * FLANGE_LIP
@@ -103,28 +109,28 @@ def save_step(shape, filepath):
 
 
 def main():
-    # Default output path
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    default_output = os.path.join(
-        script_dir, "..", "apollo-r-pro-1-case", "r_pro-1_lens_cover.step"
-    )
-    output_path = sys.argv[1] if len(sys.argv) > 1 else default_output
+    output_dir = os.path.join(script_dir, "..", "apollo-r-pro-1-case")
 
     print("Lens Cover Generator")
     print("=" * 40)
-    print(f"Slot opening:      {SLOT_WIDTH} x {SLOT_HEIGHT} mm")
-    print(f"Clearance/side:    {CLEARANCE} mm")
-    print(f"Insert body:       {SLOT_WIDTH - 2*CLEARANCE} x {SLOT_HEIGHT - 2*CLEARANCE} x {INSERT_DEPTH} mm")
-    print(f"Flange:            {SLOT_WIDTH + 2*FLANGE_LIP} x {SLOT_HEIGHT + 2*FLANGE_LIP} x {FLANGE_THICKNESS} mm")
-    print(f"Total depth:       {FLANGE_THICKNESS + INSERT_DEPTH} mm")
-    print()
 
-    cover = create_lens_cover()
-    print_dimensions(cover)
-    print()
+    for suffix, clearance in VARIANTS:
+        print(f"\n--- Variant: {suffix} (clearance {clearance:+.2f} mm/side) ---")
+        print(f"Slot opening:      {SLOT_WIDTH} x {SLOT_HEIGHT} mm")
+        print(f"Insert body:       {SLOT_WIDTH - 2*clearance} x {SLOT_HEIGHT - 2*clearance} x {INSERT_DEPTH} mm")
+        print(f"Flange:            {SLOT_WIDTH + 2*FLANGE_LIP} x {SLOT_HEIGHT + 2*FLANGE_LIP} x {FLANGE_THICKNESS} mm")
+        print(f"Total depth:       {FLANGE_THICKNESS + INSERT_DEPTH} mm")
+        print()
 
-    save_step(cover, output_path)
-    print(f"\nPrint 2 copies (one for each slot).")
+        cover = create_lens_cover(clearance)
+        print_dimensions(cover)
+        print()
+
+        output_path = os.path.join(output_dir, f"r_pro-1_lens_cover_{suffix}.step")
+        save_step(cover, output_path)
+
+    print(f"\nPrint 2 copies of each variant (one per slot).")
 
 
 if __name__ == "__main__":
