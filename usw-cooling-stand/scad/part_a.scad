@@ -8,8 +8,8 @@ plat_w = sw_w + 16;
 leg_w = 30;
 leg_x = plat_w/2 - leg_w/2 - 4;
 split_z = 75;
-tenon_w = leg_w - 6;
-tenon_d = rail_depth - 2;
+tenon_w = leg_w - 5.6;   // 24.4mm (was 24mm) - snug fit
+tenon_d = rail_depth - 1.6;  // 6.4mm (was 6mm) - snug fit
 tenon_h = 16;
 bolt_d = 4.5;
 
