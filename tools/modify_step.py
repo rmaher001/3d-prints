@@ -1,86 +1,41 @@
 #!/usr/bin/env python3
-"""
-STEP File Modifier - Cut slots/holes in STEP files using boolean operations
+"""STEP file modifier — Apollo R-PRO-1 light-slot example + CLI.
 
-Uses OCP (OpenCASCADE Python bindings) for CAD operations.
+Primitives moved to `step_primitives`. This file is kept for the documented
+`from modify_step import ...` import path (see tools/README.md) and the
+`--apollo` CLI example.
 
 Usage:
     python modify_step.py <input.step> <output.step>
-
-Or import and use programmatically - see examples below.
+    python modify_step.py --apollo <input.step> <output.step>
 """
-
-from OCP.STEPControl import STEPControl_Reader, STEPControl_Writer, STEPControl_AsIs
-from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
-from OCP.BRepAlgoAPI import BRepAlgoAPI_Cut
-from OCP.gp import gp_Pnt
-from OCP.BRepBndLib import BRepBndLib
-from OCP.Bnd import Bnd_Box
-
-
-def load_step(filepath):
-    """Load a STEP file and return the shape."""
-    reader = STEPControl_Reader()
-    status = reader.ReadFile(filepath)
-    if status != 1:
-        raise Exception(f"Error reading STEP file: {filepath}, status: {status}")
-    reader.TransferRoots()
-    return reader.OneShape()
-
-
-def save_step(shape, filepath):
-    """Save a shape to a STEP file."""
-    writer = STEPControl_Writer()
-    writer.Transfer(shape, STEPControl_AsIs)
-    status = writer.Write(filepath)
-    if status != 1:
-        raise Exception(f"Error writing STEP file: {filepath}, status: {status}")
-    print(f"Saved: {filepath}")
-
-
-def get_bounding_box(shape):
-    """Get the bounding box of a shape. Returns (xmin, ymin, zmin, xmax, ymax, zmax)."""
-    bbox = Bnd_Box()
-    BRepBndLib.AddClose_s(shape, bbox)
-    return bbox.Get()
+from step_primitives import (
+    load_step,
+    save_step,
+    cut,
+    make_box as create_box,  # legacy name preserved for tools/README.md compatibility
+    get_bbox as get_bounding_box,
+)
 
 
 def print_dimensions(shape):
-    """Print the dimensions of a shape."""
+    """Print bounding box dimensions and return them.
+
+    Kept here for backward compatibility with the documented API. New code
+    should import from `bbox` instead.
+    """
     xmin, ymin, zmin, xmax, ymax, zmax = get_bounding_box(shape)
-    print(f"Bounding box:")
+    print("Bounding box:")
     print(f"  X: {xmin:.2f} to {xmax:.2f} (width: {xmax - xmin:.2f}mm)")
     print(f"  Y: {ymin:.2f} to {ymax:.2f} (depth: {ymax - ymin:.2f}mm)")
     print(f"  Z: {zmin:.2f} to {zmax:.2f} (height: {zmax - zmin:.2f}mm)")
     return xmin, ymin, zmin, xmax, ymax, zmax
 
 
-def create_box(x, y, z, width, depth, height):
-    """Create a box shape at the given position with given dimensions."""
-    return BRepPrimAPI_MakeBox(
-        gp_Pnt(x, y, z),
-        width,
-        depth,
-        height
-    ).Shape()
-
-
-def cut(shape, cutter):
-    """Subtract cutter from shape (boolean cut)."""
-    cut_op = BRepAlgoAPI_Cut(shape, cutter)
-    cut_op.Build()
-    if not cut_op.IsDone():
-        raise Exception("Boolean cut operation failed")
-    return cut_op.Shape()
-
-
 def example_apollo_dual_slots(input_file, output_file):
-    """
-    Add two light slots to the Apollo R-PRO-1 case for the LTR390 sensor.
-    """
+    """Add two light slots to the Apollo R-PRO-1 case for the LTR390 sensor."""
     print(f"Loading: {input_file}")
     shape = load_step(input_file)
-
     xmin, ymin, zmin, xmax, ymax, zmax = print_dimensions(shape)
 
     slot_width = 40.0
@@ -90,27 +45,28 @@ def example_apollo_dual_slots(input_file, output_file):
 
     print(f"\nCreating front slot: {slot_width}mm x {slot_height}mm")
     slot1 = create_box(
-        x=-slot_width / 2,
-        y=ymax - wall_thickness - slot_height,
-        z=zmin - 5,
-        width=slot_width,
-        depth=slot_height,
-        height=cut_depth
+        -slot_width / 2,
+        ymax - wall_thickness - slot_height,
+        zmin - 5,
+        slot_width,
+        slot_height,
+        cut_depth,
     )
     shape = cut(shape, slot1)
 
     print(f"Creating top slot: {slot_width}mm x {slot_height}mm")
     slot2 = create_box(
-        x=-slot_width / 2,
-        y=ymax - 5,
-        z=zmin + wall_thickness,
-        width=slot_width,
-        depth=cut_depth,
-        height=slot_height
+        -slot_width / 2,
+        ymax - 5,
+        zmin + wall_thickness,
+        slot_width,
+        cut_depth,
+        slot_height,
     )
     shape = cut(shape, slot2)
 
     save_step(shape, output_file)
+    print(f"Saved: {output_file}")
     print("Done!")
 
 
@@ -121,6 +77,7 @@ if __name__ == "__main__":
         shape = load_step(sys.argv[1])
         print_dimensions(shape)
         save_step(shape, sys.argv[2])
+        print(f"Saved: {sys.argv[2]}")
     elif len(sys.argv) == 4 and sys.argv[1] == "--apollo":
         example_apollo_dual_slots(sys.argv[2], sys.argv[3])
     else:

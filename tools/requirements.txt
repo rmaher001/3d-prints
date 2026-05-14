@@ -1,1 +1,6 @@
 cadquery-ocp
+numpy
+numpy-stl
+trimesh
+manifold3d
+pytest
