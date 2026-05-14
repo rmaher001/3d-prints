@@ -16,22 +16,14 @@ Output: esp32-c6-c4001-enclosure.stl
 """
 
 import os
+import sys
+
 import numpy as np
 import trimesh
 import manifold3d as m3d
 
-
-def _to_manifold(mesh, tolerance=0.01):
-    """Convert a trimesh to a manifold3d Manifold, tolerating small gaps."""
-    verts = np.ascontiguousarray(mesh.vertices.astype(np.float32))
-    faces = np.ascontiguousarray(mesh.faces.astype(np.uint32))
-    return m3d.Manifold(m3d.Mesh(vert_properties=verts, tri_verts=faces, tolerance=tolerance))
-
-
-def _from_manifold(mani):
-    mesh = mani.to_mesh()
-    return trimesh.Trimesh(vertices=np.asarray(mesh.vert_properties[:, :3]),
-                           faces=np.asarray(mesh.tri_verts))
+sys.path.insert(0, "/Users/richard/3d-prints/tools")
+from trimesh_helpers import to_manifold as _to_manifold, from_manifold as _from_manifold
 
 # --- Source ---
 SOURCE_STL = os.path.expanduser("~/Downloads/esp32-s3-c4001-enclosure.stl")
