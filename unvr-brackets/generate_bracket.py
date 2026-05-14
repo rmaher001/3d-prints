@@ -25,6 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, "/Users/richard/3d-prints/tools")
 from mesh_primitives import make_box, combine
+from bbox import print_dimensions
 
 
 # ── Dimensions ───────────────────────────────────────────────
@@ -70,16 +71,9 @@ bracket.save(str(out_path))
 
 # ── Verify dimensions ────────────────────────────────────────
 
-mins = bracket.vectors.reshape(-1, 3).min(axis=0)
-maxs = bracket.vectors.reshape(-1, 3).max(axis=0)
-dims = maxs - mins
-
 print(f"Saved: {out_path}")
-print(f"Bounding box:")
-print(f"  X (width):  {dims[0]:.1f}mm  (spec: {WIDTH}mm)")
-print(f"  Y (depth):  {dims[1]:.1f}mm  (spec: {TOTAL_DEPTH}mm)")
-print(f"  Z (height): {dims[2]:.1f}mm  (spec: {TOTAL_HEIGHT}mm)")
-print(f"  Channel:    {CHANNEL:.1f}mm")
+print_dimensions(bracket)
+print(f"  Spec: {WIDTH} x {TOTAL_DEPTH} x {TOTAL_HEIGHT} mm; channel {CHANNEL:.1f} mm")
 print(f"\nPrint recommendation:")
 print(f"  Lay on 100mm side face for zero overhangs and strong layer bonding.")
 print(f"  Print 2-3 brackets, spaced along the UNVR top edge.")

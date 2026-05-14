@@ -12,7 +12,8 @@ import os
 import sys
 
 sys.path.insert(0, "/Users/richard/3d-prints/tools")
-from step_primitives import make_cylinder, translate, fuse, save_stl, get_bbox
+from step_primitives import make_cylinder, translate, fuse, save_stl
+from bbox import print_dimensions
 
 CONDUIT_DIAMETER = 22.5
 PLUG_DIAMETER = CONDUIT_DIAMETER
@@ -27,11 +28,6 @@ def create_plug(diameter: float, height: float):
     lip = make_cylinder(lip_radius, LIP_THICKNESS)
     plug = translate(make_cylinder(plug_radius, height), 0, 0, LIP_THICKNESS)
     return fuse(lip, plug)
-
-
-def print_dimensions(shape):
-    xmin, ymin, zmin, xmax, ymax, zmax = get_bbox(shape)
-    print(f"  Bounding box: {xmax - xmin:.2f} x {ymax - ymin:.2f} x {zmax - zmin:.2f} mm")
 
 
 def main():

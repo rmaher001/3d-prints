@@ -10,7 +10,8 @@ Output: ../apollo-r-pro-1-case/r_pro-1_lens_cover_{loose,press}.step
 """
 import os
 
-from step_primitives import fuse, make_box, save_step, get_bbox
+from step_primitives import fuse, make_box, save_step
+from bbox import print_dimensions
 
 SLOT_WIDTH = 40.0
 SLOT_HEIGHT = 10.0
@@ -34,14 +35,6 @@ def create_lens_cover(clearance: float):
     flange = make_box(-flange_w / 2, -flange_h / 2, 0, flange_w, flange_h, FLANGE_THICKNESS)
     insert = make_box(-insert_w / 2, -insert_h / 2, FLANGE_THICKNESS, insert_w, insert_h, INSERT_DEPTH)
     return fuse(flange, insert)
-
-
-def print_dimensions(shape):
-    xmin, ymin, zmin, xmax, ymax, zmax = get_bbox(shape)
-    print("Bounding box:")
-    print(f"  X: {xmin:.2f} to {xmax:.2f} (width: {xmax - xmin:.2f}mm)")
-    print(f"  Y: {ymin:.2f} to {ymax:.2f} (height: {ymax - ymin:.2f}mm)")
-    print(f"  Z: {zmin:.2f} to {zmax:.2f} (depth: {zmax - zmin:.2f}mm)")
 
 
 def main():

@@ -24,6 +24,7 @@ import manifold3d as m3d
 
 sys.path.insert(0, "/Users/richard/3d-prints/tools")
 from trimesh_helpers import to_manifold as _to_manifold, from_manifold as _from_manifold
+from bbox import print_dimensions
 
 # --- Source ---
 SOURCE_STL = os.path.expanduser("~/Downloads/esp32-s3-c4001-enclosure.stl")
@@ -142,7 +143,7 @@ def main():
     mesh = trimesh.load(SOURCE_STL)
     x_min = mesh.bounds[0][0]
     y_min = mesh.bounds[0][1]
-    print(f"Source: {mesh.extents[0]:.1f} x {mesh.extents[1]:.1f} x {mesh.extents[2]:.1f} mm")
+    print_dimensions(mesh, label="Source")
 
     # 1. Stretch X — extend both pieces equally, and lengthen the HIGH-X groove
     stretched = stretch_mesh_x(mesh, EXTENSION)
@@ -194,7 +195,7 @@ def main():
     output_path = os.path.join(script_dir, "esp32-c6-c4001-enclosure.stl")
     combined.export(output_path)
     print(f"\nSaved: {output_path}")
-    print(f"Final: {combined.extents[0]:.1f} x {combined.extents[1]:.1f} x {combined.extents[2]:.1f} mm")
+    print_dimensions(combined, label="Final")
     print(f"\n4 screw bosses total: 2 original (far end) + 2 new (USB end)")
 
 
