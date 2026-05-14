@@ -1,111 +1,47 @@
 #!/usr/bin/env python3
-"""
-Lens Cover Generator - Creates press-fit translucent lens covers for light slots.
+"""Lens Cover Generator — press-fit translucent lens covers for light slots.
 
 Generates STEP files for lens covers with an outer flange (lip) and insert body
 that press-fits into the light slots cut in the Apollo R-PRO-1 case.
 
-Produces two variants:
-  - loose: 0.1mm clearance per side (sliding fit)
-  - press: -0.04mm clearance per side (interference fit for 100.7% XY scale)
-
-Usage:
-    python create_lens.py
+Two variants: loose (0.1mm clearance) and press (-0.04mm interference fit for 100.7% XY scale).
 
 Output: ../apollo-r-pro-1-case/r_pro-1_lens_cover_{loose,press}.step
 """
-
 import os
 
-from OCP.BRepAlgoAPI import BRepAlgoAPI_Fuse
-from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
-from OCP.gp import gp_Pnt
-from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
-from OCP.BRepBndLib import BRepBndLib
-from OCP.Bnd import Bnd_Box
+from step_primitives import fuse, make_box, save_step, get_bbox
 
-# --- Configurable Dimensions ---
+SLOT_WIDTH = 40.0
+SLOT_HEIGHT = 10.0
 
-# Slot opening dimensions (must match modify_step.py cuts)
-SLOT_WIDTH = 40.0   # mm
-SLOT_HEIGHT = 10.0   # mm
-
-# Lens cover variants: (suffix, clearance_mm_per_side)
 VARIANTS = [
-    ("loose", 0.1),     # sliding fit
-    ("press", -0.04),   # interference fit for 100.7% XY scale
+    ("loose", 0.1),
+    ("press", -0.04),
 ]
 
-# Flange (outer lip) overhang per side
-FLANGE_LIP = 1.0    # mm per side
-
-# Thicknesses
-FLANGE_THICKNESS = 0.8   # mm - thin for light transmission
-INSERT_DEPTH = 2.0       # mm - how far insert goes into slot
+FLANGE_LIP = 1.0
+FLANGE_THICKNESS = 0.8
+INSERT_DEPTH = 2.0
 
 
-def create_lens_cover(clearance):
-    """
-    Create a lens cover shape with flange + insert body.
-
-    The cover is oriented with:
-    - Flange on the XY plane at Z=0 (face-down for printing)
-    - Insert body extending in +Z direction
-
-    Returns the fused shape.
-    """
-    # Insert body dimensions (with clearance)
+def create_lens_cover(clearance: float):
     insert_w = SLOT_WIDTH - 2 * clearance
     insert_h = SLOT_HEIGHT - 2 * clearance
-
-    # Flange dimensions
     flange_w = SLOT_WIDTH + 2 * FLANGE_LIP
     flange_h = SLOT_HEIGHT + 2 * FLANGE_LIP
 
-    # Create flange (centered at origin in XY)
-    flange = BRepPrimAPI_MakeBox(
-        gp_Pnt(-flange_w / 2, -flange_h / 2, 0),
-        flange_w,
-        flange_h,
-        FLANGE_THICKNESS,
-    ).Shape()
-
-    # Create insert body (centered at origin in XY, starts at top of flange)
-    insert = BRepPrimAPI_MakeBox(
-        gp_Pnt(-insert_w / 2, -insert_h / 2, FLANGE_THICKNESS),
-        insert_w,
-        insert_h,
-        INSERT_DEPTH,
-    ).Shape()
-
-    # Fuse the two shapes together
-    fuse = BRepAlgoAPI_Fuse(flange, insert)
-    fuse.Build()
-    if not fuse.IsDone():
-        raise RuntimeError("Boolean fuse operation failed")
-
-    return fuse.Shape()
+    flange = make_box(-flange_w / 2, -flange_h / 2, 0, flange_w, flange_h, FLANGE_THICKNESS)
+    insert = make_box(-insert_w / 2, -insert_h / 2, FLANGE_THICKNESS, insert_w, insert_h, INSERT_DEPTH)
+    return fuse(flange, insert)
 
 
 def print_dimensions(shape):
-    """Print the bounding box dimensions of a shape."""
-    bbox = Bnd_Box()
-    BRepBndLib.AddClose_s(shape, bbox)
-    xmin, ymin, zmin, xmax, ymax, zmax = bbox.Get()
-    print(f"Bounding box:")
+    xmin, ymin, zmin, xmax, ymax, zmax = get_bbox(shape)
+    print("Bounding box:")
     print(f"  X: {xmin:.2f} to {xmax:.2f} (width: {xmax - xmin:.2f}mm)")
     print(f"  Y: {ymin:.2f} to {ymax:.2f} (height: {ymax - ymin:.2f}mm)")
     print(f"  Z: {zmin:.2f} to {zmax:.2f} (depth: {zmax - zmin:.2f}mm)")
-
-
-def save_step(shape, filepath):
-    """Save a shape to a STEP file."""
-    writer = STEPControl_Writer()
-    writer.Transfer(shape, STEPControl_AsIs)
-    status = writer.Write(filepath)
-    if status != 1:
-        raise RuntimeError(f"Error writing STEP file: {filepath}, status: {status}")
-    print(f"Saved: {filepath}")
 
 
 def main():
@@ -129,8 +65,9 @@ def main():
 
         output_path = os.path.join(output_dir, f"r_pro-1_lens_cover_{suffix}.step")
         save_step(cover, output_path)
+        print(f"Saved: {output_path}")
 
-    print(f"\nPrint 2 copies of each variant (one per slot).")
+    print("\nPrint 2 copies of each variant (one per slot).")
 
 
 if __name__ == "__main__":
