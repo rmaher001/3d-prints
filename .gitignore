@@ -1,1 +1,3 @@
-esp32-c6-c4001-enclosure/__pycache__/
+__pycache__/
+.pytest_cache/
+docs/superpowers/
