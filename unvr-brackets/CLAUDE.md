@@ -27,19 +27,18 @@ Key packages:
 
 ## Shared Primitives (`tools/`)
 
-Reusable geometry builders — import these instead of redefining per-project:
+Reusable geometry helpers — import these instead of redefining per-project:
 
-| Function | What it creates |
-|----------|----------------|
-| `make_box(w, d, h, cx, cy, cz)` | Axis-aligned box, centered XY, bottom at cz |
-| `make_cylinder(r, h, cx, cy, cz, n=32)` | Cylinder from triangulated segments |
-| `make_ring(r_outer, r_inner, h, ...)` | Hollow cylinder (annulus) |
-| `combine(meshes)` | Merge mesh list via `np.concatenate` |
-| `flip_z(mesh, max_z)` | Mirror mesh in Z (swap print vs assembly orientation) |
+| Module | Functions |
+|---|---|
+| `mesh_primitives` | `make_box(w, d, h, cx, cy, cz)`, `make_cylinder(r, h, cx, cy, cz, n)`, `make_ring(r_outer, r_inner, h, ...)`, `combine(meshes)`, `flip_z(mesh, max_z)` — numpy-stl mesh output |
+| `step_primitives` | `make_box(x, y, z, w, d, h)`, `make_cylinder(r, h, x, y, z)`, `translate(s, dx, dy, dz)`, `fuse(a, b)`, `cut(a, b)`, `load_step`, `save_step`, `save_stl`, `get_bbox` — OCP/OpenCASCADE BREP |
+| `trimesh_helpers` | `to_manifold(mesh, tolerance)`, `from_manifold(mani)` — for STL boolean surgery via manifold3d |
+| `bbox` | `print_dimensions(thing, label)`, `get_extents(thing)` — works on numpy-stl, OCP, and trimesh objects |
 
-STEP tools (`tools/modify_step.py`): `load_step`, `save_step`, `cut`, `create_box`, `get_bounding_box` — for boolean operations on existing CAD files.
+Legacy import surface preserved in `tools/modify_step.py` (re-exports from `step_primitives`).
 
-**When you add a new primitive** (e.g., fillet, chamfer, wedge, slot, screw hole), add it to the shared library so future projects can use it.
+**When you add a new primitive** (e.g., fillet, chamfer, wedge, slot, screw hole), add it to the matching module so future projects can use it. Add tests in `tools/tests/`.
 
 ## Writing a New Generator
 
@@ -56,7 +55,8 @@ STEP tools (`tools/modify_step.py`): `load_step`, `save_step`, `cut`, `create_bo
 
 import sys
 sys.path.insert(0, "/Users/richard/3d-prints/tools")
-from primitives import make_box, make_cylinder, combine  # shared library
+from mesh_primitives import make_box, make_cylinder, combine
+from bbox import print_dimensions
 
 # ── Dimensions (mm) ─────────────────────────
 WIDTH = 50.0
