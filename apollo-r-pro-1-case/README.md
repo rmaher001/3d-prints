@@ -18,7 +18,7 @@ The stock FDM case blocks the **LTR390** illuminance sensor (U12). These modifie
 
 ### Fit
 
-Printed at 100%, the case grips the PCB hard enough that the board is difficult to remove. Scale the case **and** the lid (`r_pro-1_lid.stl` from the Printables model) to **101% in X and Y, 100% in Z**. The walls grow about 0.25 mm per side while the board ledge heights and the lid depth stay the same, so the board-lid clamp is unchanged. The lid STL comes standing on its two small board-hold tabs (about 20 mm² of bed contact) and turns into spaghetti printed that way; flip it so the flat outer face is on the plate.
+Printed at 100%, the case grips the PCB hard enough that the board is difficult to remove. Scale the case **and** the lid (`r_pro-1_lid.stl` from the Printables model) to **101% in X and Y, 100% in Z**. The walls grow about 0.25 mm per side while the board ledge heights and the lid depth stay the same, so the board-lid clamp is unchanged. The lid STL will not print as downloaded. It stands on two small board-hold tabs (about 20 mm² of bed contact), and its outer face is covered in 0.5 mm dimples, so flipped over only about 880 mm² of webbing touches the plate. Both ways end in spaghetti, and the dimples also make it a 1.1M-triangle mesh. Fill the dimples solid (a 0.7 mm slab under the 1 mm plate, taken from the plate's own outline) and print it outer face down. That gives 2,230 mm² of contact and about 1,200 triangles; everything above the plate is unchanged.
 
 ### Dual Slot Specifications (Recommended)
 
