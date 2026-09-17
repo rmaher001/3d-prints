@@ -16,6 +16,10 @@ The stock FDM case blocks the **LTR390** illuminance sensor (U12). These modifie
 | `r_pro-1_case-v2_FRONT_slot.step` | Single slot on front face only |
 | `r_pro-1_case-v2_with_light_slot.step` | Original smaller slot (36.5mm × 4mm) |
 
+### Fit
+
+Printed at 100%, the case grips the PCB hard enough that the board is difficult to remove. Scale the case **and** the lid (`r_pro-1_lid.stl` from the Printables model) to **101% in X and Y, 100% in Z**. The walls grow about 0.25 mm per side while the board ledge heights and the lid depth stay the same, so the board-lid clamp is unchanged.
+
 ### Dual Slot Specifications (Recommended)
 
 - **Slot 1 (Front face)**: 40mm wide × 10mm tall, positioned near top edge
