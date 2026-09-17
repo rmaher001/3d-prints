@@ -15,6 +15,8 @@ The stock FDM case blocks the **LTR390** illuminance sensor (U12). These modifie
 | `r_pro-1_lens_cover_press.step` | Translucent lens cover, -0.04mm interference fit, for 100.7% XY scale (print 2) |
 | `r_pro-1_case-v2_FRONT_slot.step` | Single slot on front face only |
 | `r_pro-1_case-v2_with_light_slot.step` | Original smaller slot (36.5mm × 4mm) |
+| `r_pro-1_standing_case.stl` | **One-piece standing case** — the case with a 20 mm vented foot built in, already at 100.5% |
+| `create_standing_case.py` | Generator for the standing case (covered by `test_standing_case.py`) |
 
 ### Fit
 
@@ -53,6 +55,17 @@ Press-fit translucent covers for the dual light slots. Print 2 (one per slot).
 - **Quantity**: 2 (one for each slot)
 
 **Tolerance tuning:** Edit the variables at the top of `tools/create_lens.py` and regenerate the STEP file. Increase `CLEARANCE` if the fit is too tight, decrease if too loose.
+
+## Standing Case
+
+`r_pro-1_standing_case.stl` is the case and its stand as one part, for a sensor sitting upright on a surface with the light slots at the top.
+
+- The bottom end grows 20 mm: side walls (1.75 mm) and front wall (2 mm) carry on down, each with the case's own rounded vent slots.
+- The back of that skirt is open, so the eight vent slots in the bottom of the case exhaust into it and out the back.
+- The base plate is solid, 3 mm, rounded back corners, running 30 mm behind the case so an 82 mm tall part does not tip.
+- Whole part: 51.2 wide x 82.2 tall x 54 deep, 22.3 cm3. Prints face down, no supports. Lens covers and the lid are unchanged.
+
+Regenerate with `../tools/venv/bin/python create_standing_case.py`.
 
 ### Sensor Info
 
