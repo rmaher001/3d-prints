@@ -11,7 +11,8 @@ The stock FDM case blocks the **LTR390** illuminance sensor (U12). These modifie
 | File | Description |
 |------|-------------|
 | `r_pro-1_case-v2_DUAL_slots.step` | **Recommended** - Dual 40mm × 10mm slots (front + top) |
-| `r_pro-1_lens_cover.step` | Press-fit translucent lens cover for light slots (print 2) |
+| `r_pro-1_lens_cover_loose.step` | Translucent lens cover, 0.1mm clearance per side (print 2) |
+| `r_pro-1_lens_cover_press.step` | Translucent lens cover, -0.04mm interference fit, for 100.7% XY scale (print 2) |
 | `r_pro-1_case-v2_FRONT_slot.step` | Single slot on front face only |
 | `r_pro-1_case-v2_with_light_slot.step` | Original smaller slot (36.5mm × 4mm) |
 
