@@ -89,19 +89,17 @@ def test_foot_is_solid_underneath(parts):
     assert len(sec.discrete) == 1, "base plate should be one unbroken outline"
 
 
-def test_skirt_is_vented(parts):
-    """Air still has to get out: the slots in the skirt are real holes."""
+def test_skirt_walls_are_plain(parts):
+    """Richard dropped the skirt slots: the walls are solid, the back vents."""
     case, standing = parts
     x_half = case.extents[0] / 2.0
     y_top = case.bounds[0, 1]
-    holes = [(0.0, y_top - 6.0, 1.0),                      # front wall slot
-             (0.0, y_top - 13.5, 1.0),                     # front wall slot
-             (x_half - 0.9, y_top - 9.5, 8.0),             # right side wall slot
-             (-(x_half - 0.9), y_top - 9.5, 16.0)]         # left side wall slot
-    inside = standing.contains(np.array(holes))
-    assert not inside.any(), f"slot centres should be open, got {inside}"
-    solid = standing.contains(np.array([[0.0, y_top - 10.0, 1.0]]))
-    assert solid[0], "the wall between the slots should still be solid"
+    wall_points = np.array([[0.0, y_top - 6.0, 1.0],            # front wall
+                            [0.0, y_top - 13.5, 1.0],           # front wall
+                            [x_half - 0.9, y_top - 9.5, 8.0],   # right side wall
+                            [-(x_half - 0.9), y_top - 9.5, 16.0]])  # left side wall
+    inside = standing.contains(wall_points)
+    assert inside.all(), f"skirt walls should be unbroken, got {inside}"
 
 
 def test_prints_as_one_solid(parts):

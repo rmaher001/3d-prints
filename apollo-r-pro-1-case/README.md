@@ -60,10 +60,10 @@ Press-fit translucent covers for the dual light slots. Print 2 (one per slot).
 
 `r_pro-1_standing_case.stl` is the case and its stand as one part, for a sensor sitting upright on a surface with the light slots at the top.
 
-- The bottom end grows 20 mm: side walls (1.75 mm) and front wall (2 mm) carry on down, each with the case's own rounded vent slots.
+- The bottom end grows 20 mm: side walls (1.75 mm) and front wall (2 mm) carry on down as plain, unbroken walls.
 - The back of that skirt is open, so the eight vent slots in the bottom of the case exhaust into it and out the back.
 - The base plate is solid, 3 mm, rounded back corners, running 30 mm behind the case so an 82 mm tall part does not tip.
-- Whole part: 51.2 wide x 82.2 tall x 54 deep, 22.3 cm3. Prints face down, no supports. Lens covers and the lid are unchanged.
+- Whole part: 51.2 wide x 82.2 tall x 54 deep, 22.7 cm3. Prints face down, no supports. Lens covers and the lid are unchanged.
 
 Regenerate with `../tools/venv/bin/python create_standing_case.py`.
 

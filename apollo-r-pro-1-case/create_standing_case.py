@@ -3,8 +3,8 @@
 
 The case stands on the end that carries the cable openings, light slots up. This
 grows that end downward by LIFT_MM: the side walls and the front wall carry on
-down, the back of the skirt is left open so the vents in the bottom of the case
-exhaust into it and straight out the back, and a solid base plate at the foot
+down as plain walls, the back of the skirt is left open so the vents in the
+bottom of the case exhaust into it and out the back, and a solid base plate
 runs HEEL_REACH past the case's back so the tall part does not tip.
 
 Everything above the skirt is the dual-slot case untouched, scaled SCALE_XY in
@@ -23,7 +23,7 @@ import trimesh
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "tools"))
 from bbox import print_dimensions
-from mesh_shapes import centered_box, rounded_slot
+from mesh_shapes import centered_box
 from step_primitives import load_step, save_stl
 from trimesh_helpers import from_manifold, to_manifold
 
@@ -37,9 +37,7 @@ FRONT_T = 2.0        # front wall thickness down the skirt
 BASE_T = 3.0         # base plate thickness, solid
 HEEL_REACH = 30.0    # how far the base runs back BEHIND the case
 HEEL_R = 8.0         # corner radius on the back of the heel
-SLOT_W = 2.6         # skirt vent slots, in the case's own slot language
-SLOT_L = 9.0
-OVERCUT = 2.0        # makes every slot break through both faces of its wall
+OVERCUT = 2.0        # oversize on cutting tools, so they break clean through
 DEFLECTION = 0.02
 
 
@@ -73,19 +71,6 @@ def foot(case):
         solid = to_manifold(wall) if solid is None else solid + to_manifold(wall)
     solid = solid + to_manifold(
         centered_box(2 * x_half, LIFT_MM, FRONT_T, (0, y_mid, FRONT_T / 2.0)))
-
-    # carry the case's vent pattern down the skirt: front face and both sides
-    for xc in (-x_half * 0.63, 0.0, x_half * 0.63):
-        for yc in (y_top - 6.0, y_top - 13.5):
-            solid = solid - to_manifold(
-                rounded_slot(SLOT_L, SLOT_W, FRONT_T + OVERCUT,
-                             (xc, yc, FRONT_T / 2.0), along="x", through="z"))
-    for side in (-1, 1):
-        for zc in (8.0, 16.0):
-            solid = solid - to_manifold(
-                rounded_slot(SLOT_L, SLOT_W, WALL + OVERCUT,
-                             (side * (x_half - WALL / 2.0), y_top - 9.5, zc),
-                             along="z", through="x"))
 
     base = to_manifold(centered_box(2 * x_half, BASE_T, heel_z,
                                     (0, y_bot + BASE_T / 2.0, heel_z / 2.0)))
