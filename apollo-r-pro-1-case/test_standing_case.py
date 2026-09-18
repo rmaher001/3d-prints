@@ -11,6 +11,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "tools"))
 from create_standing_case import (
     BASE_T,
+    BLEND,
     HEEL_REACH,
     LIFT_MM,
     SCALE_XY,
@@ -35,10 +36,10 @@ def _section_z_extent(mesh, y):
 
 
 def test_case_part_is_unchanged(parts):
-    """Above the foot, every cross-section still matches the case exactly."""
+    """Above the skirt's blend into the case, every cross-section still matches."""
     case, standing = parts
     y_top = case.bounds[0, 1]
-    for offset in (2.0, 12.0, 30.0, 55.0):
+    for offset in (BLEND + 1.0, 12.0, 30.0, 55.0):
         y = y_top + offset
         a = case.section(plane_origin=[0, y, 0], plane_normal=[0, 1, 0]).to_2D()[0].area
         b = standing.section(plane_origin=[0, y, 0], plane_normal=[0, 1, 0]).to_2D()[0].area
@@ -114,3 +115,26 @@ def test_case_is_actually_scaled_to_the_printed_size(parts):
     xmin, ymin, _, xmax, ymax, _ = get_bbox(load_step(SOURCE_STEP))
     assert case.extents[0] == pytest.approx((xmax - xmin) * SCALE_XY, abs=0.02)
     assert case.extents[1] == pytest.approx((ymax - ymin) * SCALE_XY, abs=0.02)
+
+
+def test_joint_to_the_case_is_flush(parts):
+    """The case's end is rounded off; the skirt has to fill that, not leave a groove."""
+    case, standing = parts
+    x_half = case.extents[0] / 2.0
+    y_top = case.bounds[0, 1]
+    for offset in (-4.0, -1.0, -0.2, 0.2, 1.0, 2.0, 4.0):
+        y = y_top + offset
+        sec = standing.section(plane_origin=[0, y, 0], plane_normal=[0, 1, 0])
+        pts = np.vstack(sec.discrete)
+        widest = max(pts[:, 0].max(), -pts[:, 0].min())
+        assert widest == pytest.approx(x_half, abs=0.06), (
+            f"side wall steps in to {widest:.2f} at {offset:+.1f} mm from the joint")
+
+
+def test_skirt_fill_clears_the_lowest_vent(parts):
+    """Filling the joint must not plug the case's own bottom vent slots."""
+    case, standing = parts
+    x_half = case.extents[0] / 2.0
+    y_top = case.bounds[0, 1]
+    vent = np.array([[x_half - 0.9, y_top + 9.4, 4.0]])   # middle of the lowest side vent
+    assert not standing.contains(vent)[0], "the lowest side vent slot got filled in"

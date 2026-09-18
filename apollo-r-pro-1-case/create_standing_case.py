@@ -37,6 +37,7 @@ FRONT_T = 2.0        # front wall thickness down the skirt
 BASE_T = 3.0         # base plate thickness, solid
 HEEL_REACH = 30.0    # how far the base runs back BEHIND the case
 HEEL_R = 8.0         # corner radius on the back of the heel
+BLEND = 2.5          # skirt runs this far up the case, filling its rounded end
 OVERCUT = 2.0        # oversize on cutting tools, so they break clean through
 DEFLECTION = 0.02
 
@@ -62,15 +63,18 @@ def foot(case):
     y_bot = y_top - LIFT_MM
     z_back = case.bounds[1, 2]           # the case's open back
     heel_z = z_back + HEEL_REACH
-    y_mid = (y_top + y_bot) / 2.0
+    # the case's end is rounded off over ~2 mm, so the skirt runs BLEND past the
+    # joint to fill that curve; the lowest vent slot is 4.9 mm up, well clear
+    wall_h = LIFT_MM + BLEND
+    y_mid = (y_top + BLEND + y_bot) / 2.0
 
     solid = None
     for side in (-1, 1):                 # side walls, continuing the case's own
-        wall = centered_box(WALL, LIFT_MM, z_back,
+        wall = centered_box(WALL, wall_h, z_back,
                             (side * (x_half - WALL / 2.0), y_mid, z_back / 2.0))
         solid = to_manifold(wall) if solid is None else solid + to_manifold(wall)
     solid = solid + to_manifold(
-        centered_box(2 * x_half, LIFT_MM, FRONT_T, (0, y_mid, FRONT_T / 2.0)))
+        centered_box(2 * x_half, wall_h, FRONT_T, (0, y_mid, FRONT_T / 2.0)))
 
     base = to_manifold(centered_box(2 * x_half, BASE_T, heel_z,
                                     (0, y_bot + BASE_T / 2.0, heel_z / 2.0)))
