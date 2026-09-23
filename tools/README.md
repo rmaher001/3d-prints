@@ -23,7 +23,7 @@ Or use the venv directly without activating:
 |---|---|
 | `mesh_primitives` | numpy-stl primitives: `make_box`, `make_cylinder`, `make_ring`, `combine`, `flip_z` |
 | `step_primitives` | OCP/OpenCASCADE: `make_box`, `make_cylinder`, `translate`, `fuse`, `cut`, `load_step`, `save_step`, `save_stl`, `get_bbox` |
-| `mesh_shapes` | trimesh shapes shared by the generators: `centered_box`, `rounded_slot` (stadium-shaped vent slot, any axis) |
+| `mesh_shapes` | trimesh shapes shared by the generators: `centered_box`, `rounded_slot` (stadium-shaped vent slot, any axis), `scooped_pocket` (pocket cutter with rounded bottom edges, e.g. a coin cup) |
 | `trimesh_helpers` | `to_manifold`, `from_manifold` — round-trip between trimesh and manifold3d for boolean ops on imported STLs |
 | `bbox` | `print_dimensions(thing, label)` and `get_extents(thing)` — works on numpy-stl meshes, OCP shapes, and trimesh objects |
 | `modify_step` | Legacy import surface + `example_apollo_dual_slots` CLI. New code should import from `step_primitives` directly. |
