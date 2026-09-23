@@ -31,6 +31,34 @@ def centered_box(width: float, depth: float, height: float,
     return box
 
 
+def scooped_pocket(width: float, depth: float, height: float, radius: float,
+                   floor_center=(0.0, 0.0, 0.0), sections: int = 64) -> trimesh.Trimesh:
+    """A pocket cutter whose two bottom edges along X are rounded by `radius`.
+
+    Subtract it from a block to get a cup you can sweep coins out of. `width`
+    runs along X (ends stay square), `depth` along Y, `height` up Z from
+    `floor_center`, which is the middle of the pocket's floor.
+    """
+    if not (0.0 < radius <= depth / 2.0 and radius < height):
+        raise ValueError(f"radius {radius} must be > 0 and fit a {depth} x {height} section")
+    upper = centered_box(width, depth, height - radius, (0.0, 0.0, radius + (height - radius) / 2.0))
+    solid = to_manifold(upper)
+    if depth > 2 * radius:
+        solid = solid + to_manifold(centered_box(width, depth - 2 * radius, radius,
+                                                 (0.0, 0.0, radius / 2.0)))
+    for side in (-1, 1):
+        edge = trimesh.creation.cylinder(radius=radius, height=width, sections=sections)
+        edge.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0]))
+        edge.apply_translation([0.0, side * (depth / 2.0 - radius), radius])
+        solid = solid + to_manifold(edge)
+    # the edge cylinders are 2r tall; trim anything past the pocket's own height
+    solid = solid ^ to_manifold(centered_box(width, depth, height, (0.0, 0.0, height / 2.0)))
+    pocket = from_manifold(solid)
+    pocket.merge_vertices()
+    pocket.apply_translation(floor_center)
+    return pocket
+
+
 def rounded_slot(length: float, width: float, depth: float,
                  center=(0.0, 0.0, 0.0), along: str = "x",
                  through: str = "z", sections: int = 40) -> trimesh.Trimesh:
