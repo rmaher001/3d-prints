@@ -6,7 +6,8 @@ Collection of 3D printing projects and modifications.
 
 | Project | Description |
 |---------|-------------|
-| [apollo-r-pro-1-case](./apollo-r-pro-1-case) | Modified case for Apollo Automation R-PRO-1 with light sensor slots |
+| [ams2pro-desiccant-zth05](./ams2pro-desiccant-zth05) | Tuya ZTH05 Zigbee hygrometer rework for the SPILLPROOF2 AMS 2 Pro desiccant boxes |
+| [apollo-r-pro-1-case](./apollo-r-pro-1-case) | Modified case for Apollo Automation R-PRO-1 with light sensor slots, plus a one-piece standing case |
 | [conduit-plug](./conduit-plug) | Parametric circular plugs for 22.5 mm conduit (2/3/4 mm heights) |
 | [esp32-c6-c4001-enclosure](./esp32-c6-c4001-enclosure) | ESP32-S3 C4001 enclosure modded for ESP32-C6 (extended length, added bosses, taller Z) |
 | [garage-street-bt-proxy-carrier](./garage-street-bt-proxy-carrier) | Carrier + desiccant basket for an Olimex ESP32-POE-ISO-EA in 1.5″ PVC conduit |
