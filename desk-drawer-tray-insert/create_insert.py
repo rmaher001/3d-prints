@@ -5,11 +5,12 @@ The tray is 365.5 x 179.5 x 30 mm inside -- too long for the P2S bed -- so the
 insert prints as two halves that sit side by side; the tray's own walls hold
 them together. Front is -Y (the side nearest you with the drawer open).
 
-  LEFT half   front: two pen / screwdriver channels
+  LEFT half   front: three channels -- pens, screwdrivers, the letter opener
               middle: AAA and AA, lying flat
               back: coin cup (scooped floor) and an open bin
   RIGHT half  right edge: one lane for both car key fobs, end to end
-              badge + cards pocket (raised floor, finger dips), USB / SD bin
+              badge + cards pocket (raised floor, finger dips), USB / SD bin;
+              the wall between them lines up with the left half's
 
 Outputs (next to this script):
   desk-drawer-tray-insert-left.stl / -right.stl        the halves
@@ -34,10 +35,10 @@ from trimesh_helpers import from_manifold, to_manifold  # noqa: E402
 # The tray (measured inside) and how the insert sits in it (mm)
 # ---------------------------------------------------------------------------
 TRAY_W, TRAY_D, TRAY_H = 365.5, 179.5, 30.0
-CLEAR = 0.5                         # per side, insert <-> tray wall
-INSERT_W = TRAY_W - 2 * CLEAR       # 364.5
-INSERT_D = TRAY_D - 2 * CLEAR       # 178.5
-HALF_W = INSERT_W / 2.0             # 182.25 -- each half fits the 256 bed
+CLEAR = 0.0                         # per side; the 0.5 fit test (2026-09-23) sat ~1 mm loose
+INSERT_W = TRAY_W - 2 * CLEAR       # 365.5
+INSERT_D = TRAY_D - 2 * CLEAR       # 179.5
+HALF_W = INSERT_W / 2.0             # 182.75 -- each half fits the 256 bed
 HEIGHT = TRAY_H - 1.0               # stop 1 mm under the rim so the drawer closes
 FLOOR = 1.2
 WALL = 1.6
@@ -61,9 +62,8 @@ LONGEST_TOOL = 165.0                # estimated from the photo: Wiha precision d
 PEN_CHANNEL = 28.0
 BATTERY_BAY = 53.0                  # front to back; AA lie in it lengthwise
 COIN_CUP_W = 70.0
-COIN_SCOOP_R = 15.0
+COIN_SCOOP_R = 10.0                 # leaves a flat middle in the 33 mm cup so coins lie flat
 FOB_LANE_W = 87.0
-BADGE_BAY_D = 122.0
 BADGE_POCKET_DEPTH = 12.0           # the badge sits on a raised floor this far down
 FINGER_DIP_R = 14.0                 # reaches ~4 mm under the badge's long edges
 FINGER_DIP_DEPTH = 8.0              # below the raised floor: a fingertip, not a well
@@ -101,19 +101,24 @@ def bays(side):
         y = in_y0
         pens_front = Bay(in_x0, y, in_x1, y + PEN_CHANNEL)
         y = pens_front.y1 + WALL
-        pens_back = Bay(in_x0, y, in_x1, y + PEN_CHANNEL)
+        pens_middle = Bay(in_x0, y, in_x1, y + PEN_CHANNEL)
+        y = pens_middle.y1 + WALL
+        pens_back = Bay(in_x0, y, in_x1, y + PEN_CHANNEL)          # the letter opener
         y = pens_back.y1 + WALL
         aaa = Bay(in_x0, y, mid - WALL / 2, y + BATTERY_BAY)
         aa = Bay(mid + WALL / 2, y, in_x1, y + BATTERY_BAY)
         y = aa.y1 + WALL
         coins = Bay(in_x0, y, in_x0 + COIN_CUP_W, in_y1)
         open_bin = Bay(coins.x1 + WALL, y, in_x1, in_y1)
-        return {"pens_front": pens_front, "pens_back": pens_back, "aaa": aaa, "aa": aa,
-                "coins": coins, "open_bin": open_bin}
+        return {"pens_front": pens_front, "pens_middle": pens_middle, "pens_back": pens_back,
+                "aaa": aaa, "aa": aa, "coins": coins, "open_bin": open_bin}
     if side == "right":
+        # the USB / badge wall lines up with the left half's wall behind the
+        # second pen channel, so the two halves read as one grid
+        split = bays("left")["pens_middle"].y1
         fobs = Bay(in_x1 - FOB_LANE_W, in_y0, in_x1, in_y1)
-        badge = Bay(in_x0, in_y1 - BADGE_BAY_D, fobs.x0 - WALL, in_y1)
-        usb = Bay(in_x0, in_y0, badge.x1, badge.y0 - WALL)
+        usb = Bay(in_x0, in_y0, fobs.x0 - WALL, split)
+        badge = Bay(in_x0, split + WALL, usb.x1, in_y1)
         return {"fobs": fobs, "badge": badge, "usb": usb}
     raise ValueError(f"side must be 'left' or 'right', not {side!r}")
 
