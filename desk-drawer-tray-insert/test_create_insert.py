@@ -36,17 +36,17 @@ def test_each_half_has_the_planned_envelope(side):
     assert math.isclose(h, ci.HEIGHT, abs_tol=0.02)
 
 
-FIT_TESTED = (364.5, 178.5)     # printed 2026-09-23: fit, but ~1 mm loose all around
+FIT_TESTED = (365.5, 179.5)     # 2nd fit test, cooled on the plate (2026-09-23)
+PLAY = (1.0, 0.5)               # what Richard measured left over: side to side, front to back
 
 
-def test_the_halves_take_up_the_looseness_the_fit_test_showed():
-    """The measured tray (365.5 x 179.5) is evidently a little bigger than measured:
-    outlines built 1 mm under it dropped in with ~1 mm to spare. Richard: "just do
-    1mm" -- so the pair grows 1 mm each way over what was fit-tested."""
+def test_the_halves_take_up_the_play_the_fit_test_showed():
+    """The tray is bigger than the tape said. The 2nd outline pair left 1 mm of
+    play side to side and 0.5 mm front to back; the insert grows by exactly that."""
     across = HALVES["left"].extents[0] + HALVES["right"].extents[0]
     front_to_back = max(m.extents[1] for m in HALVES.values())
-    assert math.isclose(across, FIT_TESTED[0] + 1.0, abs_tol=0.02), f"{across:.2f} mm across"
-    assert math.isclose(front_to_back, FIT_TESTED[1] + 1.0, abs_tol=0.02), f"{front_to_back:.2f} mm deep"
+    assert math.isclose(across, FIT_TESTED[0] + PLAY[0], abs_tol=0.02), f"{across:.2f} mm across"
+    assert math.isclose(front_to_back, FIT_TESTED[1] + PLAY[1], abs_tol=0.02), f"{front_to_back:.2f} mm deep"
 
 
 def test_walls_stay_below_the_rim():
