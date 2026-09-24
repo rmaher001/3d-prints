@@ -35,12 +35,10 @@ from trimesh_helpers import from_manifold, to_manifold  # noqa: E402
 # The tray (measured inside) and how the insert sits in it (mm)
 # ---------------------------------------------------------------------------
 TRAY_W, TRAY_D, TRAY_H = 365.5, 179.5, 30.0
-CLEAR = -0.5                        # per side, vs the MEASURED tray: the first fit test
-                                    # (CLEAR 0.5) sat ~1 mm loose on every side, so the tray
-                                    # is bigger than measured -- grow 1 mm per side over it
-INSERT_W = TRAY_W - 2 * CLEAR       # 366.5
-INSERT_D = TRAY_D - 2 * CLEAR       # 180.5
-HALF_W = INSERT_W / 2.0             # 183.25 -- each half fits the 256 bed
+CLEAR = 0.0                         # per side; the 0.5 fit test (2026-09-23) sat ~1 mm loose
+INSERT_W = TRAY_W - 2 * CLEAR       # 365.5
+INSERT_D = TRAY_D - 2 * CLEAR       # 179.5
+HALF_W = INSERT_W / 2.0             # 182.75 -- each half fits the 256 bed
 HEIGHT = TRAY_H - 1.0               # stop 1 mm under the rim so the drawer closes
 FLOOR = 1.2
 WALL = 1.6

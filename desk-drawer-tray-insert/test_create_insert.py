@@ -41,13 +41,12 @@ FIT_TESTED = (364.5, 178.5)     # printed 2026-09-23: fit, but ~1 mm loose all a
 
 def test_the_halves_take_up_the_looseness_the_fit_test_showed():
     """The measured tray (365.5 x 179.5) is evidently a little bigger than measured:
-    outlines built 1 mm under it dropped in with ~1 mm to spare on every side.
-    Richard: "1mm ... on all sides" -- so the pair grows 1 mm per side (2 mm each
-    way) over what was fit-tested."""
+    outlines built 1 mm under it dropped in with ~1 mm to spare. Richard: "just do
+    1mm" -- so the pair grows 1 mm each way over what was fit-tested."""
     across = HALVES["left"].extents[0] + HALVES["right"].extents[0]
     front_to_back = max(m.extents[1] for m in HALVES.values())
-    assert math.isclose(across, FIT_TESTED[0] + 2.0, abs_tol=0.02), f"{across:.2f} mm across"
-    assert math.isclose(front_to_back, FIT_TESTED[1] + 2.0, abs_tol=0.02), f"{front_to_back:.2f} mm deep"
+    assert math.isclose(across, FIT_TESTED[0] + 1.0, abs_tol=0.02), f"{across:.2f} mm across"
+    assert math.isclose(front_to_back, FIT_TESTED[1] + 1.0, abs_tol=0.02), f"{front_to_back:.2f} mm deep"
 
 
 def test_walls_stay_below_the_rim():
