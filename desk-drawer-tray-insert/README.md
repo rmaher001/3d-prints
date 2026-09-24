@@ -42,7 +42,9 @@ fit, because the half is 2.75 mm longer than the tray is deep.
 1. **Fit test first**, in any spare filament. Print both outlines, drop them into
    the tray side by side, then set both key fobs in the right-hand lane. If
    the outlines bind, lower `CLEAR` (0.5 mm per side). If they rattle, raise it.
-2. **The halves:** Bambu PLA Matte, Ivory White (Desert Tan as the alternative).
+2. **The halves:** Bambu PLA Wood, White Oak, the closest match to the tray's
+   pale wood. Dry it first (the wood powder takes on moisture), and use the
+   0.4 mm nozzle; Bambu says PLA Wood is not compatible with the 0.2 mm one.
    Floor down, no supports, 0.20 mm layers, 4 walls (the 1.6 mm walls are four
    0.4 mm lines), 15% infill.
 
