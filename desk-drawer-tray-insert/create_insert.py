@@ -5,11 +5,12 @@ The tray is 365.5 x 179.5 x 30 mm inside -- too long for the P2S bed -- so the
 insert prints as two halves that sit side by side; the tray's own walls hold
 them together. Front is -Y (the side nearest you with the drawer open).
 
-  LEFT half   front: two pen / screwdriver channels
+  LEFT half   front: three channels -- pens, screwdrivers, the letter opener
               middle: AAA and AA, lying flat
               back: coin cup (scooped floor) and an open bin
   RIGHT half  right edge: one lane for both car key fobs, end to end
-              badge + cards pocket (raised floor, finger dips), USB / SD bin
+              badge + cards pocket (raised floor, finger dips), USB / SD bin;
+              the wall between them lines up with the left half's
 
 Outputs (next to this script):
   desk-drawer-tray-insert-left.stl / -right.stl        the halves
@@ -61,9 +62,8 @@ LONGEST_TOOL = 165.0                # estimated from the photo: Wiha precision d
 PEN_CHANNEL = 28.0
 BATTERY_BAY = 53.0                  # front to back; AA lie in it lengthwise
 COIN_CUP_W = 70.0
-COIN_SCOOP_R = 15.0
+COIN_SCOOP_R = 10.0                 # leaves a flat middle in the 33 mm cup so coins lie flat
 FOB_LANE_W = 87.0
-BADGE_BAY_D = 122.0
 BADGE_POCKET_DEPTH = 12.0           # the badge sits on a raised floor this far down
 FINGER_DIP_R = 14.0                 # reaches ~4 mm under the badge's long edges
 FINGER_DIP_DEPTH = 8.0              # below the raised floor: a fingertip, not a well

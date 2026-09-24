@@ -165,7 +165,7 @@ def test_three_full_length_channels_one_for_the_letter_opener():
 def test_the_right_halfs_divider_lines_up_with_the_left_halfs():
     left, right = HALVES["left"], HALVES["right"]
     wall_y = ci.bays("left")["pens_middle"].y1 + ci.WALL / 2
-    z = ci.HEIGHT / 2
+    z = ci.HEIGHT - 1.0          # above the badge's raised floor: only a wall is solid here
     assert _solid(left, ci.HALF_W / 2, wall_y, z)
     usb = ci.bays("right")["usb"]
     assert _solid(right, usb.cx, wall_y, z), "right half's wall is not in line"
@@ -180,6 +180,8 @@ def test_the_coin_cup_is_scooped_at_the_front_and_back_edges():
     assert _solid(m, bay.cx, bay.y0 + 1.0, corner), "front edge of the coin cup is square"
     assert _solid(m, bay.cx, bay.y1 - 1.0, corner), "back edge of the coin cup is square"
     assert not _solid(m, bay.cx, bay.cy, corner), "the coin cup has no flat middle"
+    flat = bay.d - 2 * ci.COIN_SCOOP_R
+    assert flat >= 10.0, f"only {flat:.1f} mm of flat floor -- coins would lie tilted"
 
 
 def test_the_badge_sits_on_a_raised_floor_near_the_top():
