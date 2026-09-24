@@ -36,14 +36,17 @@ def test_each_half_has_the_planned_envelope(side):
     assert math.isclose(h, ci.HEIGHT, abs_tol=0.02)
 
 
-MIN_GAP = 0.4        # per side; less and a slightly out-of-square tray binds it
+FIT_TESTED = (364.5, 178.5)     # printed 2026-09-23: fit, but ~1 mm loose all around
 
 
-def test_both_halves_drop_into_the_tray_with_a_gap_all_round():
+def test_the_halves_take_up_the_looseness_the_fit_test_showed():
+    """The measured tray (365.5 x 179.5) is evidently a little bigger than measured:
+    outlines built 1 mm under it dropped in with ~1 mm to spare. Richard: "just do
+    1mm" -- so the pair grows 1 mm each way over what was fit-tested."""
     across = HALVES["left"].extents[0] + HALVES["right"].extents[0]
     front_to_back = max(m.extents[1] for m in HALVES.values())
-    assert (ci.TRAY_W - across) / 2 >= MIN_GAP, f"{across:.2f} mm across"
-    assert (ci.TRAY_D - front_to_back) / 2 >= MIN_GAP, f"{front_to_back:.2f} mm deep"
+    assert math.isclose(across, FIT_TESTED[0] + 1.0, abs_tol=0.02), f"{across:.2f} mm across"
+    assert math.isclose(front_to_back, FIT_TESTED[1] + 1.0, abs_tol=0.02), f"{front_to_back:.2f} mm deep"
 
 
 def test_walls_stay_below_the_rim():
@@ -96,7 +99,8 @@ def test_neighbouring_bays_are_separated_by_a_wall(side):
     m, b = HALVES[side], ci.bays(side)
     z = ci.HEIGHT / 2
     pairs = {
-        "left": [("pens_front", "pens_back"), ("pens_back", "aaa"), ("aaa", "aa"),
+        "left": [("pens_front", "pens_middle"), ("pens_middle", "pens_back"),
+                 ("pens_back", "aaa"), ("aaa", "aa"),
                  ("aaa", "coins"), ("coins", "open_bin"), ("aa", "open_bin")],
         "right": [("usb", "badge"), ("badge", "fobs"), ("usb", "fobs")],
     }[side]
@@ -114,11 +118,13 @@ def test_neighbouring_bays_are_separated_by_a_wall(side):
 # --- the measured things fit ------------------------------------------------
 
 def test_the_badge_has_room_on_every_side():
-    """Stood upright: the 70 mm side runs across, the 110 mm side front to back."""
+    """Stood upright: the 70 mm side runs across, the 110 mm side front to back.
+    The sides get finger room; the ends gave some up (3 mm) to line the USB wall
+    up with the left half, which Richard approved."""
     bay = ci.bays("right")["badge"]
     long_side, short_side = ci.BADGE
     assert (bay.w - short_side) / 2 >= 5.0
-    assert (bay.d - long_side) / 2 >= 5.0
+    assert (bay.d - long_side) / 2 >= 3.0
 
 
 def test_the_cards_lie_in_the_badge_pocket():
@@ -148,9 +154,22 @@ def test_batteries_lie_flat_in_their_bay(name, cell):
     assert ci.FLOOR + nested_two_layers < ci.HEIGHT, f"a second layer of {cell} sticks out"
 
 
-def test_pens_and_screwdrivers_lie_full_length():
-    for name in ("pens_front", "pens_back"):
-        assert ci.bays("left")[name].w >= ci.LONGEST_TOOL
+def test_three_full_length_channels_one_for_the_letter_opener():
+    """Pens, screwdrivers and the letter opener: three channels the same size."""
+    channels = [ci.bays("left")[n] for n in ("pens_front", "pens_middle", "pens_back")]
+    for bay in channels:
+        assert bay.w >= ci.LONGEST_TOOL
+        assert math.isclose(bay.d, ci.PEN_CHANNEL, abs_tol=0.01)
+
+
+def test_the_right_halfs_divider_lines_up_with_the_left_halfs():
+    left, right = HALVES["left"], HALVES["right"]
+    wall_y = ci.bays("left")["pens_middle"].y1 + ci.WALL / 2
+    z = ci.HEIGHT / 2
+    assert _solid(left, ci.HALF_W / 2, wall_y, z)
+    usb = ci.bays("right")["usb"]
+    assert _solid(right, usb.cx, wall_y, z), "right half's wall is not in line"
+    assert math.isclose(usb.y1, ci.bays("left")["pens_middle"].y1, abs_tol=0.01)
 
 
 # --- the shaped bays ---------------------------------------------------------
