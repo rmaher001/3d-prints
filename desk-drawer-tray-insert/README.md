@@ -9,15 +9,14 @@ own walls hold them together, so they need no joint.
 
 Front is at the bottom of the picture: the side nearest you with the drawer open.
 
-| Bay | Size (mm) | For |
+| Region | Size (mm) | For |
 |---|---|---|
-| pens front / pens middle | 180 × 28 | pens and precision screwdrivers, lying full length |
-| pens back | 180 × 28 | the letter opener |
-| aaa / aa | 89 × 53 | batteries lying front to back, up to two nested layers |
-| coins | 70 × 33 | coins; the front and back floor edges curve up so coins slide out |
-| open bin | 108 × 33 | small odds and ends |
-| badge | 91 × 117, 12 deep | badge in its holder (110 × 70) standing upright, credit cards on top; raised floor with a finger dip on each long side |
-| usb | 91 × 58 | USB sticks and SD cards; its back wall lines up with the left half's wall behind the second pen channel |
+| pen shelf | 180 × 117, raised | one round groove each (17 wide, 16 deep) for a pen, pencil, Sharpie and two screwdrivers; a flat 24 mm slot for a slim letter opener; a finger trough across the middle to lift things out |
+| aa / aaa | 69 × 58 / 53 × 58, raised | 4 AA and 4 AAA, one slot each, lying front to back just under the top; a finger trough across the middle |
+| coins | 55 × 58 | coins; the front and back floor edges curve up so coins slide out |
+| cards | 91 × 60, 14 deep | ~10 credit-card-size cards lying flat on a raised floor; a finger dip at each end |
+| usb | 91 × 55 | USB sticks, SD cards and other small things |
+| open bin | 91 × 58 | odds and ends; its front wall lines up with the pen shelf's back wall |
 | fobs | 87 × 177 | both car key fobs (95 × 55 and 80 × 50) end to end, no divider |
 
 Either half can be turned 180° or swapped with the other. A 90° turn won't
@@ -31,17 +30,22 @@ fit, because the half is about 3 mm longer than the tray is deep.
 | `test_create_insert.py` | Fit, printability and "does the item fit its bay" invariants |
 | `desk-drawer-tray-insert-left.stl` / `-right.stl` | The two halves |
 | `desk-drawer-tray-insert-fit-test-left.stl` / `-right.stl` | 3 mm tall floorless outlines for a fit check |
+| `desk-drawer-tray-insert-groove-test.stl` | A 25 mm slice of the pen shelf, to try each pen and screwdriver in its groove |
 | `preview-layout.png` | Top view sliced from the generated model |
 
 ```bash
-../tools/venv/bin/python create_insert.py            # regenerate the STLs + preview
+../tools/venv/bin/python create_insert.py            # regenerate the STLs, strip + preview
 ../tools/venv/bin/python -m pytest test_create_insert.py -q
 ```
 
 ## Printing
 
-1. **Fit test first**, in any spare filament. Print both outlines, drop them into
-   the tray side by side, then set both key fobs in the right-hand lane. The
+1. **Groove strip and fit test first**, in any spare filament. Lay each pen,
+   the pencil, the Sharpie and both screwdrivers in the groove strip: they should
+   drop in without forcing and sit no higher than the top. If one is too fat,
+   raise `MAX_PEN_DIA` (the grooves are sized for 16 mm). Then print both
+   outlines, drop them into the tray side by side, and set both key fobs in
+   the right-hand lane. The
    fit tests set the size, not the tape measure: the tray is a little bigger than
    the 365.5 × 179.5 it measured. The second pair of outlines (cooled on the
    plate) left 1 mm of play side to side and 0.5 mm front to back, so `CLEAR_W`
@@ -55,4 +59,7 @@ fit, because the half is about 3 mm longer than the tray is deep.
    0.4 mm lines), 15% infill.
 
 The longest pen or screwdriver (`LONGEST_TOOL`, 165 mm) is an estimate from a
-photo. The channels are 179 mm long, so anything up to that length lies flat.
+photo. The grooves are 180 mm long, so anything up to that length lies flat.
+
+The raised shelves are solid in the model; the slicer fills them with 15%
+infill, so they cost print time more than filament.
