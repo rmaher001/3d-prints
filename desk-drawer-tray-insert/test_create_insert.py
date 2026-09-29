@@ -201,7 +201,9 @@ def test_four_battery_slots_each_holding_one_cell_below_the_top(kind, cell):
         assert s.w >= dia + 1.0, "slot too narrow for the cell"
         assert ci.slot_depth(kind) >= dia, "cell pokes out of its slot"
     region = LEFT[kind]
-    assert all(region.x0 <= s.x0 and s.x1 <= region.x1 and region.y0 <= s.y0 and s.y1 <= region.y1
+    eps = 1e-6                                # float noise, e.g. 68.80000000000001
+    assert all(region.x0 - eps <= s.x0 and s.x1 <= region.x1 + eps
+               and region.y0 - eps <= s.y0 and s.y1 <= region.y1 + eps
                for s in slots), "a slot is outside its region"
 
 
@@ -307,3 +309,28 @@ def test_the_preview_is_written_as_a_png(tmp_path):
     out = tmp_path / "preview.png"
     ci.save_preview(str(out))
     assert out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+# --- sliver cleanup ----------------------------------------------------------
+
+def _sheet():
+    import trimesh
+    return trimesh.Trimesh(vertices=[[500, 0, 0], [501, 0, 0], [500, 1, 0]],
+                           faces=[[0, 1, 2], [0, 2, 1]], process=False)
+
+
+def test_a_zero_volume_sliver_is_dropped():
+    import trimesh
+    body = trimesh.creation.box(extents=(10, 10, 10))
+    cleaned = ci._without_slivers(trimesh.util.concatenate([body, _sheet()]))
+    assert cleaned.body_count == 1
+    assert math.isclose(cleaned.volume, 1000.0, rel_tol=1e-6)
+
+
+def test_two_real_bodies_are_not_silently_merged_away():
+    import trimesh
+    a = trimesh.creation.box(extents=(10, 10, 10))
+    b = trimesh.creation.box(extents=(10, 10, 10))
+    b.apply_translation([50, 0, 0])
+    with pytest.raises(AssertionError):
+        ci._without_slivers(trimesh.util.concatenate([a, b]))
