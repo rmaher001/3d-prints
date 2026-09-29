@@ -11,7 +11,7 @@ Front is at the bottom of the picture: the side nearest you with the drawer open
 
 | Region | Size (mm) | For |
 |---|---|---|
-| pen shelf | 180 × 117, raised | one round groove each (17 wide, 16 deep) for a pen, pencil, Sharpie and two screwdrivers; a flat 24 mm slot for a slim letter opener; a finger trough across the middle to lift things out |
+| pen shelf | 180 × 117, raised | one round groove each (17 wide, 16 deep) for a pen, pencil, Sharpie and two screwdrivers; a flat 24 × 20 mm slot for the Slice 10513 pen cutter (133.5 × 17.4 mm by its listing); a finger trough across the middle to lift things out |
 | aa / aaa | 69 × 58 / 53 × 58, raised | 4 AA and 4 AAA, one slot each, lying front to back just under the top; a finger trough across the middle |
 | coins | 55 × 58 | coins; the front and back floor edges curve up so coins slide out |
 | cards | 91 × 60, 14 deep | ~10 credit-card-size cards lying flat on a raised floor; a finger dip at each end |

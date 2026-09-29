@@ -145,11 +145,11 @@ def test_the_bins_are_open_down_to_the_floor(side, name):
     assert _solid(m, bay.cx, bay.cy, ci.FLOOR / 2), f"{name} has no floor"
 
 
-# --- pens, pencil, Sharpie, screwdrivers, letter opener --------------------
+# --- pens, pencil, Sharpie, screwdrivers, pen cutter ------------------------------------
 
-def test_one_groove_per_item_plus_the_letter_opener_slot():
+def test_one_groove_per_item_plus_the_pen_cutter_slot():
     names = [n for n, _ in ci.grooves()]
-    assert names == ["pen", "pencil", "sharpie", "screwdriver_1", "screwdriver_2", "letter_opener"]
+    assert names == ["pen", "pencil", "sharpie", "screwdriver_1", "screwdriver_2", "pen_cutter"]
 
 
 def test_the_grooves_fill_the_pen_shelf_front_to_back():
@@ -170,13 +170,14 @@ def test_each_round_groove_takes_the_fattest_item_below_the_top(name, groove):
 @pytest.mark.parametrize("name, groove", ci.grooves())
 def test_each_groove_is_cut_to_its_depth_on_a_raised_shelf(name, groove):
     m = HALVES["left"]
-    bottom = ci.HEIGHT - ci.GROOVE_DEPTH
+    depth = ci.CUTTER_SLOT_DEPTH if name == "pen_cutter" else ci.GROOVE_DEPTH
+    bottom = ci.HEIGHT - depth
     x = groove.x0 + 20.0                      # clear of the finger trough
     assert not _solid(m, x, groove.cy, bottom + 0.5), f"{name} is not cut to its depth"
     assert _solid(m, x, groove.cy, bottom - 0.5), f"{name} has no raised floor under it"
 
 
-def test_round_grooves_have_round_bottoms_and_the_opener_slot_is_flat():
+def test_round_grooves_have_round_bottoms_and_the_cutter_slot_is_flat():
     m = HALVES["left"]
     x = 20.0
     z = ci.HEIGHT - ci.GROOVE_DEPTH + 0.8     # just above the bottom
@@ -185,8 +186,16 @@ def test_round_grooves_have_round_bottoms_and_the_opener_slot_is_flat():
     # a true half-pipe: a quarter of the way across, 1 mm up, is still under the curve
     bottom = ci.HEIGHT - ci.GROOVE_DEPTH
     assert _solid(m, x, pen.y0 + pen.d / 4, bottom + 1.0), "pen groove is flat-bottomed"
-    opener = dict(ci.grooves())["letter_opener"]
-    assert not _solid(m, x, opener.y0 + 0.8, z), "letter opener slot is not flat"
+    cutter = dict(ci.grooves())["pen_cutter"]
+    z = ci.HEIGHT - ci.CUTTER_SLOT_DEPTH + 0.8
+    assert not _solid(m, x, cutter.y0 + 0.8, z), "pen cutter slot is not flat"
+
+
+def test_the_pen_cutter_slot_takes_the_slice_10513_below_the_top():
+    """The Slice 10513 is 133.5 long and 17.4 square by its listing; it must sit below the top."""
+    cutter = dict(ci.grooves())["pen_cutter"]
+    assert cutter.w >= ci.CUTTER_L and cutter.d >= ci.CUTTER_DIA + 2.0
+    assert ci.CUTTER_SLOT_DEPTH >= ci.CUTTER_DIA + 1.0
 
 
 def test_ridges_separate_neighbouring_grooves():
