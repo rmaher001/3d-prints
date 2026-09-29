@@ -6,8 +6,8 @@ insert prints as two halves that sit side by side; the tray's own walls hold
 them together. Front is -Y (the side nearest you with the drawer open).
 
   LEFT half   front: a raised pen shelf -- one round groove each for a pen,
-                     pencil, Sharpie and two screwdrivers, a flat letter-opener
-                     slot, and a finger trough across the middle
+                     pencil, Sharpie and two screwdrivers, a flat slot for the
+                     Slice pen cutter, and a finger trough across the middle
               back: 4 AA and 4 AAA in their own raised slots, and a coin cup
   RIGHT half  right edge: one lane for both car key fobs, end to end
               front to back: a raised card pocket (~10 cards), a USB / SD
@@ -68,7 +68,9 @@ MAX_PEN_DIA = 16.0                  # assumed (Sharpie cap + clip); the groove s
 # Layout
 # ---------------------------------------------------------------------------
 GROOVE_W = 17.0                     # round-bottom groove, one item each
-OPENER_W = 24.0                     # flat slot for a slim letter opener
+CUTTER_W = 24.0                     # flat slot for the Slice 10513 pen cutter
+CUTTER_L, CUTTER_DIA = 133.5, 17.4  # its listed size; measure the real one when it arrives
+CUTTER_SLOT_DEPTH = 20.0            # below the top: the 17.4 mm body sits under the rim
 RIDGE = 1.6                         # between grooves and between battery slots
 GROOVE_DEPTH = 16.0                 # below the top: a 16 mm item lies flush
 TROUGH_W = 25.0                     # finger trough across the middle of the grooves
@@ -116,7 +118,7 @@ def bays(side):
     """The regions of one half, in that half's own coordinates (front-left = 0,0)."""
     in_x0, in_x1 = WALL, HALF_W - WALL
     in_y0, in_y1 = WALL, INSERT_D - WALL
-    shelf_y1 = in_y0 + 5 * (GROOVE_W + RIDGE) + OPENER_W
+    shelf_y1 = in_y0 + 5 * (GROOVE_W + RIDGE) + CUTTER_W
     back_y0 = shelf_y1 + WALL
     if side == "left":
         pen_shelf = Bay(in_x0, in_y0, in_x1, shelf_y1)
@@ -142,7 +144,7 @@ def grooves():
     for name in ("pen", "pencil", "sharpie", "screwdriver_1", "screwdriver_2"):
         out.append((name, Bay(shelf.x0, y, shelf.x1, y + GROOVE_W)))
         y += GROOVE_W + RIDGE
-    out.append(("letter_opener", Bay(shelf.x0, y, shelf.x1, y + OPENER_W)))
+    out.append(("pen_cutter", Bay(shelf.x0, y, shelf.x1, y + CUTTER_W)))
     return out
 
 
@@ -194,8 +196,8 @@ def _cutters(side, name, bay, top):
     """What to subtract for one region of the full-height half."""
     if name == "pen_shelf":
         bottom = HEIGHT - GROOVE_DEPTH
-        cuts = [_round_groove(g, bottom, top) if n != "letter_opener" else _prism(g, bottom, top)
-                for n, g in grooves()]
+        cuts = [_round_groove(g, bottom, top) if n != "pen_cutter"
+                else _prism(g, HEIGHT - CUTTER_SLOT_DEPTH, top) for n, g in grooves()]
         trough = Bay(bay.cx - TROUGH_W / 2, bay.y0, bay.cx + TROUGH_W / 2, bay.y1)
         return cuts + [_prism(trough, bottom - TROUGH_DEPTH, top)]
     if name in ("aa", "aaa"):
