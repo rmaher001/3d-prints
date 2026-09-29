@@ -278,7 +278,9 @@ def test_the_finger_dips_reach_under_the_card_ends():
         assert not _solid(m, x, bay.cy, z), f"no finger dip under the card end at x={x:.1f}"
     assert _solid(m, bay.cx, bay.cy, z), "the dips have eaten the whole floor"
     x = bay.x0 + 3.0
-    assert _solid(m, x, bay.cy, z - ci.FINGER_DIP_DEPTH), "dip goes deeper than planned"
+    deck = ci.HEIGHT - ci.CARD_POCKET_DEPTH
+    assert not _solid(m, x, bay.cy, deck - ci.FINGER_DIP_DEPTH + 0.5), "dip is shallower than planned"
+    assert _solid(m, x, bay.cy, deck - ci.FINGER_DIP_DEPTH - 0.5), "dip goes deeper than planned"
 
 
 # --- key fobs ----------------------------------------------------------------
