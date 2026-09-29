@@ -312,17 +312,17 @@ def test_the_fit_test_is_a_short_floorless_outline_of_the_same_footprint(side):
         assert not _solid(t, bay.cx, bay.cy, ci.FIT_TEST_H - 0.3), "fit test has a lid"
 
 
-def test_the_groove_strip_is_a_short_slice_of_the_real_pen_shelf():
-    """Prints in minutes; every pen and screwdriver can be tried in its groove."""
+def test_the_groove_strip_is_one_groove_of_the_real_pen_shelf():
+    """All the round grooves are the same, so one long enough for a pen tests every item."""
+    name, g = ci.grooves()[0]
     w, d, h = STRIP.extents
-    assert math.isclose(w, ci.STRIP_L, abs_tol=0.02)
-    assert d >= LEFT["pen_shelf"].y1 and math.isclose(h, ci.HEIGHT, abs_tol=0.02)
+    assert math.isclose(w, ci.STRIP_L, abs_tol=0.02) and ci.STRIP_L >= 100
+    assert math.isclose(d, g.y1 + ci.RIDGE, abs_tol=0.02) and math.isclose(h, ci.HEIGHT, abs_tol=0.02)
     assert STRIP.is_watertight and STRIP.body_count == 1
     x = STRIP.bounds[0][0] + ci.STRIP_L / 2
-    for name, g in ci.grooves():
-        bottom = ci.HEIGHT - ci.GROOVE_DEPTH
-        assert not _solid(STRIP, x, g.cy, bottom + 0.8), f"{name} groove missing from the strip"
-        assert _solid(STRIP, x, g.cy, bottom - 0.5), f"{name} groove in the strip has no floor"
+    bottom = ci.HEIGHT - ci.GROOVE_DEPTH
+    assert not _solid(STRIP, x, g.cy, bottom + 0.8), "the groove is missing from the strip"
+    assert _solid(STRIP, x, g.cy, bottom - 0.5), "the groove in the strip has no floor"
 
 
 def test_the_preview_shows_both_halves_side_by_side(tmp_path):
