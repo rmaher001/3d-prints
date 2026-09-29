@@ -21,7 +21,6 @@ Outputs (next to this script):
 
 Usage:  ../tools/venv/bin/python create_insert.py
 """
-import math
 import os
 import sys
 from typing import NamedTuple
@@ -32,7 +31,7 @@ from shapely.geometry import Polygon
 TOOLS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools")
 sys.path.insert(0, TOOLS)
 from mesh_shapes import centered_box, scooped_pocket  # noqa: E402
-from trimesh_helpers import from_manifold, to_manifold  # noqa: E402
+from trimesh_helpers import drop_slivers, from_manifold, to_manifold  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # The tray (measured inside) and how the insert sits in it (mm)
@@ -184,14 +183,11 @@ def _finger_dips(bay, z0, z1):
     return dips
 
 
-def _round_groove(bay, bottom, top, along_y=False):
-    """A half-pipe cutter: the bay's short side is its diameter."""
-    if not along_y:
-        return scooped_pocket(bay.w, bay.d, top - bottom, bay.d / 2.0, (bay.cx, bay.cy, bottom))
-    cutter = scooped_pocket(bay.d, bay.w, top - bottom, bay.w / 2.0)
-    cutter.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [0, 0, 1]))
-    cutter.apply_translation([bay.cx, bay.cy, bottom])
-    return cutter
+def _round_groove(bay, bottom, top, along="x"):
+    """A half-pipe cutter over the bay: its short side is the diameter."""
+    length, across = (bay.w, bay.d) if along == "x" else (bay.d, bay.w)
+    return scooped_pocket(length, across, top - bottom, across / 2.0, (bay.cx, bay.cy, bottom),
+                          along=along)
 
 
 def _cutters(side, name, bay, top):
@@ -205,7 +201,7 @@ def _cutters(side, name, bay, top):
     if name in ("aa", "aaa"):
         bottom = HEIGHT - slot_depth(name)
         slots = battery_slots(name)
-        cuts = [_round_groove(s, bottom, top, along_y=True) for s in slots]
+        cuts = [_round_groove(s, bottom, top, along="y") for s in slots]
         trough = Bay(slots[0].x0, bay.cy - BATTERY_TROUGH_W / 2, slots[-1].x1,
                      bay.cy + BATTERY_TROUGH_W / 2)
         return cuts + [_prism(trough, bottom - 5.0, top)]
@@ -228,20 +224,7 @@ def build_half(side, fit_test=False):
             continue
         for cut in _cutters(side, name, bay, top):
             solid = solid - (cut if not isinstance(cut, trimesh.Trimesh) else to_manifold(cut))
-    return _without_slivers(from_manifold(solid))
-
-
-def _without_slivers(mesh):
-    """Drop zero-volume sheets. Where a half-pipe's curve meets its own flat side
-    the boolean can leave a flat sliver of triangles behind; it holds no material
-    and would not print, but it counts as a second body."""
-    mesh.merge_vertices()
-    bodies = mesh.split(only_watertight=False)
-    if len(bodies) == 1:
-        return mesh
-    kept = [b for b in bodies if abs(b.volume) > 1e-3]
-    assert len(kept) == 1, f"{len(kept)} real bodies, not 1"
-    return kept[0]
+    return drop_slivers(from_manifold(solid))
 
 
 def build_groove_strip():
@@ -276,11 +259,13 @@ def save_preview(path):
     ax.set_aspect("equal")
     ax.axis("off")
     fig.savefig(path, dpi=110, bbox_inches="tight", facecolor="white")
+    drawn_width = ax.dataLim.width                      # how far across the outlines reach
     plt.close(fig)
+    return drawn_width
 
 
-def main():
-    here = os.path.dirname(os.path.abspath(__file__))
+def main(here=None):
+    here = here or os.path.dirname(os.path.abspath(__file__))
     for side in ("left", "right"):
         for fit_test, suffix in ((False, ""), (True, "-fit-test")):
             mesh = build_half(side, fit_test=fit_test)

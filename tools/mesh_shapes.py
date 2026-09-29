@@ -32,13 +32,18 @@ def centered_box(width: float, depth: float, height: float,
 
 
 def scooped_pocket(width: float, depth: float, height: float, radius: float,
-                   floor_center=(0.0, 0.0, 0.0), sections: int = 64) -> trimesh.Trimesh:
-    """A pocket cutter whose two bottom edges along X are rounded by `radius`.
+                   floor_center=(0.0, 0.0, 0.0), sections: int = 64,
+                   along: str = "x") -> trimesh.Trimesh:
+    """A pocket cutter whose two bottom edges along its length are rounded by `radius`.
 
-    Subtract it from a block to get a cup you can sweep coins out of. `width`
-    runs along X (ends stay square), `depth` along Y, `height` up Z from
-    `floor_center`, which is the middle of the pocket's floor.
+    Subtract it from a block to get a cup you can sweep coins out of. `width` is
+    the length and runs along `along` ("x" or "y"; its ends stay square),
+    `depth` runs across it, `height` up Z from `floor_center`, which is the
+    middle of the pocket's floor. With `radius = depth / 2` it is a half-pipe:
+    a round-bottomed groove.
     """
+    if along not in ("x", "y"):
+        raise ValueError(f"along must be 'x' or 'y', not {along!r}")
     if not (0.0 < radius <= depth / 2.0 and radius < height):
         raise ValueError(f"radius {radius} must be > 0 and fit a {depth} x {height} section")
     upper = centered_box(width, depth, height - radius, (0.0, 0.0, radius + (height - radius) / 2.0))
@@ -55,6 +60,8 @@ def scooped_pocket(width: float, depth: float, height: float, radius: float,
     solid = solid ^ to_manifold(centered_box(width, depth, height, (0.0, 0.0, height / 2.0)))
     pocket = from_manifold(solid)
     pocket.merge_vertices()
+    if along == "y":
+        pocket.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 0, 1]))
     pocket.apply_translation(floor_center)
     return pocket
 

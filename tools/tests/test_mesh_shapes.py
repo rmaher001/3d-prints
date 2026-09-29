@@ -105,3 +105,17 @@ def test_scooped_pocket_with_radius_half_the_depth_is_a_half_pipe():
     assert p.is_watertight
     assert p.contains([[0.0, 0.0, 0.5]])[0]
     assert not p.contains([[0.0, 15 - 0.5, 0.5]])[0]
+
+
+def test_scooped_pocket_can_run_along_y():
+    """Same cutter turned: length on Y, the rounded edges run along Y too."""
+    p = scooped_pocket(40.0, 30.0, 20.0, radius=8.0, floor_center=(5.0, -2.0, 1.0), along="y")
+    np.testing.assert_allclose(p.bounds[0], [5 - 15, -2 - 20, 1.0], atol=0.02)
+    np.testing.assert_allclose(p.bounds[1], [5 + 15, -2 + 20, 21.0], atol=0.02)
+    assert not p.contains([[5 - 15 + 0.5, -2.0, 1.5]])[0]      # rounded corner on the X side
+    assert p.contains([[5.0, -2 - 20 + 0.5, 1.5]])[0]          # Y ends stay square
+
+
+def test_scooped_pocket_refuses_an_unknown_axis():
+    with pytest.raises(ValueError):
+        scooped_pocket(40.0, 30.0, 20.0, radius=8.0, along="z")

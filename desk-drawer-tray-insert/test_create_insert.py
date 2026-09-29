@@ -79,6 +79,18 @@ def test_the_outer_corners_are_chamfered(side):
     assert _solid(m, ci.CHAMFER + 0.5, 0.3, z), "the wall next to the chamfer is missing"
 
 
+@pytest.mark.parametrize("side", SIDES)
+def test_every_region_keeps_a_full_outer_wall(side):
+    m, z = HALVES[side], ci.HEIGHT - 0.5
+    for name, b in ci.bays(side).items():
+        assert b.x0 >= ci.WALL - 1e-6 and b.y0 >= ci.WALL - 1e-6, f"{name} eats the outer wall"
+        assert b.x1 <= ci.HALF_W - ci.WALL + 1e-6 and b.y1 <= ci.INSERT_D - ci.WALL + 1e-6, \
+            f"{name} eats the outer wall"
+    for x, y in ((ci.WALL / 2, ci.INSERT_D / 2), (ci.HALF_W - ci.WALL / 2, ci.INSERT_D / 2),
+                 (ci.HALF_W / 2, ci.WALL / 2), (ci.HALF_W / 2, ci.INSERT_D - ci.WALL / 2)):
+        assert _solid(m, x, y, z), f"outer wall missing at ({x:.1f}, {y:.1f})"
+
+
 def test_bays_refuses_an_unknown_side():
     with pytest.raises(ValueError):
         ci.bays("middle")
@@ -170,6 +182,9 @@ def test_round_grooves_have_round_bottoms_and_the_opener_slot_is_flat():
     z = ci.HEIGHT - ci.GROOVE_DEPTH + 0.8     # just above the bottom
     pen = dict(ci.grooves())["pen"]
     assert _solid(m, x, pen.y0 + 0.8, z), "pen groove has a square bottom corner"
+    # a true half-pipe: a quarter of the way across, 1 mm up, is still under the curve
+    bottom = ci.HEIGHT - ci.GROOVE_DEPTH
+    assert _solid(m, x, pen.y0 + pen.d / 4, bottom + 1.0), "pen groove is flat-bottomed"
     opener = dict(ci.grooves())["letter_opener"]
     assert not _solid(m, x, opener.y0 + 0.8, z), "letter opener slot is not flat"
 
@@ -199,7 +214,7 @@ def test_four_battery_slots_each_holding_one_cell_below_the_top(kind, cell):
     for s in slots:
         assert s.d >= length + 1.0, "cell does not lie in the slot"
         assert s.w >= dia + 1.0, "slot too narrow for the cell"
-        assert ci.slot_depth(kind) >= dia, "cell pokes out of its slot"
+        assert ci.slot_depth(kind) - dia >= 0.5, "cell sits flush with, or above, the top"
     region = LEFT[kind]
     eps = 1e-6                                # float noise, e.g. 68.80000000000001
     assert all(region.x0 - eps <= s.x0 and s.x1 <= region.x1 + eps
@@ -236,6 +251,8 @@ def test_the_coin_cup_is_scooped_with_a_flat_middle():
     assert _solid(m, bay.cx, bay.y1 - 1.0, corner), "back edge of the coin cup is square"
     assert not _solid(m, bay.cx, bay.cy, corner), "the coin cup has no flat middle"
     assert bay.d - 2 * ci.COIN_SCOOP_R >= 10.0, "coins would lie tilted"
+    # a 10 mm curve: 3 mm in and 8 mm up is already open; a bigger one would still be solid
+    assert not _solid(m, bay.cx, bay.y0 + 3.0, ci.FLOOR + 8.0), "the scoop is bigger than planned"
 
 
 # --- cards -----------------------------------------------------------------
@@ -290,6 +307,7 @@ def test_the_fit_test_is_a_short_floorless_outline_of_the_same_footprint(side):
     assert t.is_watertight and t.body_count == 1
     for bay in ci.bays(side).values():
         assert not _solid(t, bay.cx, bay.cy, ci.FLOOR / 2), "fit test has a floor"
+        assert not _solid(t, bay.cx, bay.cy, ci.FIT_TEST_H - 0.3), "fit test has a lid"
 
 
 def test_the_groove_strip_is_a_short_slice_of_the_real_pen_shelf():
@@ -305,32 +323,19 @@ def test_the_groove_strip_is_a_short_slice_of_the_real_pen_shelf():
         assert _solid(STRIP, x, g.cy, bottom - 0.5), f"{name} groove in the strip has no floor"
 
 
-def test_the_preview_is_written_as_a_png(tmp_path):
+def test_the_preview_shows_both_halves_side_by_side(tmp_path):
+    import matplotlib.image as mpimg
     out = tmp_path / "preview.png"
-    ci.save_preview(str(out))
+    drawn_width = ci.save_preview(str(out))
     assert out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    h, w = mpimg.imread(str(out)).shape[:2]
+    assert w / h > 1.6, "the picture is not wide"
+    assert math.isclose(drawn_width, ci.INSERT_W, abs_tol=0.5), "the halves are not side by side"
 
 
-# --- sliver cleanup ----------------------------------------------------------
-
-def _sheet():
-    import trimesh
-    return trimesh.Trimesh(vertices=[[500, 0, 0], [501, 0, 0], [500, 1, 0]],
-                           faces=[[0, 1, 2], [0, 2, 1]], process=False)
-
-
-def test_a_zero_volume_sliver_is_dropped():
-    import trimesh
-    body = trimesh.creation.box(extents=(10, 10, 10))
-    cleaned = ci._without_slivers(trimesh.util.concatenate([body, _sheet()]))
-    assert cleaned.body_count == 1
-    assert math.isclose(cleaned.volume, 1000.0, rel_tol=1e-6)
-
-
-def test_two_real_bodies_are_not_silently_merged_away():
-    import trimesh
-    a = trimesh.creation.box(extents=(10, 10, 10))
-    b = trimesh.creation.box(extents=(10, 10, 10))
-    b.apply_translation([50, 0, 0])
-    with pytest.raises(AssertionError):
-        ci._without_slivers(trimesh.util.concatenate([a, b]))
+def test_main_writes_every_print_file_and_the_preview(tmp_path):
+    ci.main(str(tmp_path))
+    for name in ("left", "right", "fit-test-left", "fit-test-right", "groove-test"):
+        f = tmp_path / f"desk-drawer-tray-insert-{name}.stl"
+        assert f.stat().st_size > 1000, f"{f.name} missing or empty"
+    assert (tmp_path / "preview-layout.png").exists()
