@@ -1,10 +1,10 @@
-"""Invariants for the desk drawer tray insert.
+"""Invariants for the desk drawer tray insert (rev 3).
 
-Three things have to hold. The halves must drop into the wooden tray (365.5 x
-179.5 x 30 inside) and each fit the P2S bed. Every bay must be a real opening
-with a floor under it and walls between it and its neighbours. And the things
-Richard measured must actually fit the bays meant for them, with the finger
-room he asked for.
+Three things have to hold. The halves must drop into the wooden tray and each fit
+the P2S bed. Every region must be what it claims -- a bin open to its floor, or a
+raised shelf whose items sit near the top. And the things Richard keeps in the
+tray must fit the places meant for them: one pen per groove, one battery per
+slot, a stack of cards in a pocket he can pinch.
 
     ../tools/venv/bin/python -m pytest test_create_insert.py -q
 """
@@ -20,6 +20,8 @@ import create_insert as ci
 SIDES = ("left", "right")
 HALVES = {side: ci.build_half(side) for side in SIDES}
 FIT_TESTS = {side: ci.build_half(side, fit_test=True) for side in SIDES}
+STRIP = ci.build_groove_strip()
+LEFT, RIGHT = ci.bays("left"), ci.bays("right")
 
 
 def _solid(mesh, x, y, z):
@@ -77,32 +79,32 @@ def test_the_outer_corners_are_chamfered(side):
     assert _solid(m, ci.CHAMFER + 0.5, 0.3, z), "the wall next to the chamfer is missing"
 
 
-# --- every bay is a real opening -------------------------------------------
-
-def _bay_cases():
-    for side in SIDES:
-        for name in ci.bays(side):
-            yield side, name
+def test_bays_refuses_an_unknown_side():
+    with pytest.raises(ValueError):
+        ci.bays("middle")
 
 
-@pytest.mark.parametrize("side, name", list(_bay_cases()))
-def test_every_bay_is_open_with_a_floor_under_it(side, name):
-    m, bay = HALVES[side], ci.bays(side)[name]
-    assert not _solid(m, bay.cx, bay.cy, ci.HEIGHT - 0.5), f"{name} is closed at the top"
-    assert _solid(m, bay.cx, bay.cy, ci.FLOOR / 2), f"{name} has no floor"
-    if name != "badge":                       # the badge pocket has a raised floor
-        assert not _solid(m, bay.cx, bay.cy, ci.FLOOR + 0.5), f"{name} is not cut to the floor"
+# --- the layout that was approved ------------------------------------------
+
+def test_the_approved_regions_and_nothing_else():
+    assert set(LEFT) == {"pen_shelf", "aa", "aaa", "coins"}
+    assert set(RIGHT) == {"cards", "usb", "open_bin", "fobs"}
+
+
+def test_front_to_back_order_on_the_right():
+    """Cards at the front, then USB/SD, then the open bin -- as drawn."""
+    assert RIGHT["cards"].y0 < RIGHT["usb"].y0 < RIGHT["open_bin"].y0
 
 
 @pytest.mark.parametrize("side", SIDES)
-def test_neighbouring_bays_are_separated_by_a_wall(side):
+def test_neighbouring_regions_are_separated_by_a_wall(side):
     m, b = HALVES[side], ci.bays(side)
-    z = ci.HEIGHT / 2
+    z = ci.HEIGHT - 0.5          # at the very top, above every raised shelf
     pairs = {
-        "left": [("pens_front", "pens_middle"), ("pens_middle", "pens_back"),
-                 ("pens_back", "aaa"), ("aaa", "aa"),
-                 ("aaa", "coins"), ("coins", "open_bin"), ("aa", "open_bin")],
-        "right": [("usb", "badge"), ("badge", "fobs"), ("usb", "fobs")],
+        "left": [("pen_shelf", "aa"), ("pen_shelf", "aaa"), ("pen_shelf", "coins"),
+                 ("aa", "aaa"), ("aaa", "coins")],
+        "right": [("cards", "usb"), ("usb", "open_bin"), ("cards", "fobs"),
+                  ("usb", "fobs"), ("open_bin", "fobs")],
     }[side]
     for a, c in pairs:
         p, q = b[a], b[c]
@@ -115,106 +117,167 @@ def test_neighbouring_bays_are_separated_by_a_wall(side):
             assert _solid(m, p.x1 + ci.WALL / 2, y, z), f"no wall between {a} and {c}"
 
 
-# --- the measured things fit ------------------------------------------------
-
-def test_the_badge_has_room_on_every_side():
-    """Stood upright: the 70 mm side runs across, the 110 mm side front to back.
-    The sides get finger room; the ends gave some up (3 mm) to line the USB wall
-    up with the left half, which Richard approved."""
-    bay = ci.bays("right")["badge"]
-    long_side, short_side = ci.BADGE
-    assert (bay.w - short_side) / 2 >= 5.0
-    assert (bay.d - long_side) / 2 >= 3.0
+def test_the_right_halfs_bin_wall_lines_up_with_the_pen_shelf_wall():
+    wall_y = LEFT["pen_shelf"].y1 + ci.WALL / 2
+    z = ci.HEIGHT - 0.5
+    assert math.isclose(RIGHT["usb"].y1, LEFT["pen_shelf"].y1, abs_tol=0.01)
+    assert _solid(HALVES["left"], LEFT["pen_shelf"].cx, wall_y, z)
+    assert _solid(HALVES["right"], RIGHT["usb"].cx, wall_y, z), "right half's wall is not in line"
 
 
-def test_the_cards_lie_in_the_badge_pocket():
-    bay = ci.bays("right")["badge"]
-    assert ci.CARD[1] < bay.w and ci.CARD[0] < bay.d
+@pytest.mark.parametrize("side, name", [("left", "coins"), ("right", "usb"),
+                                        ("right", "open_bin"), ("right", "fobs")])
+def test_the_bins_are_open_down_to_the_floor(side, name):
+    m, bay = HALVES[side], ci.bays(side)[name]
+    assert not _solid(m, bay.cx, bay.cy, ci.FLOOR + 0.5), f"{name} is not cut to the floor"
+    assert _solid(m, bay.cx, bay.cy, ci.FLOOR / 2), f"{name} has no floor"
 
+
+# --- pens, pencil, Sharpie, screwdrivers, letter opener --------------------
+
+def test_one_groove_per_item_plus_the_letter_opener_slot():
+    names = [n for n, _ in ci.grooves()]
+    assert names == ["pen", "pencil", "sharpie", "screwdriver_1", "screwdriver_2", "letter_opener"]
+
+
+def test_the_grooves_fill_the_pen_shelf_front_to_back():
+    g = ci.grooves()
+    shelf = LEFT["pen_shelf"]
+    assert math.isclose(g[0][1].y0, shelf.y0, abs_tol=0.01)
+    assert math.isclose(g[-1][1].y1, shelf.y1, abs_tol=0.01)
+
+
+@pytest.mark.parametrize("name, groove", ci.grooves()[:5])
+def test_each_round_groove_takes_the_fattest_item_below_the_top(name, groove):
+    """A 16 mm item lies in it with room at the sides and without poking out."""
+    assert groove.w >= ci.LONGEST_TOOL
+    assert groove.d >= ci.MAX_PEN_DIA + 1.0
+    assert ci.GROOVE_DEPTH >= ci.MAX_PEN_DIA
+
+
+@pytest.mark.parametrize("name, groove", ci.grooves())
+def test_each_groove_is_cut_to_its_depth_on_a_raised_shelf(name, groove):
+    m = HALVES["left"]
+    bottom = ci.HEIGHT - ci.GROOVE_DEPTH
+    x = groove.x0 + 20.0                      # clear of the finger trough
+    assert not _solid(m, x, groove.cy, bottom + 0.5), f"{name} is not cut to its depth"
+    assert _solid(m, x, groove.cy, bottom - 0.5), f"{name} has no raised floor under it"
+
+
+def test_round_grooves_have_round_bottoms_and_the_opener_slot_is_flat():
+    m = HALVES["left"]
+    x = 20.0
+    z = ci.HEIGHT - ci.GROOVE_DEPTH + 0.8     # just above the bottom
+    pen = dict(ci.grooves())["pen"]
+    assert _solid(m, x, pen.y0 + 0.8, z), "pen groove has a square bottom corner"
+    opener = dict(ci.grooves())["letter_opener"]
+    assert not _solid(m, x, opener.y0 + 0.8, z), "letter opener slot is not flat"
+
+
+def test_ridges_separate_neighbouring_grooves():
+    m = HALVES["left"]
+    g = [b for _, b in ci.grooves()]
+    for a, b in zip(g, g[1:]):
+        assert _solid(m, 20.0, (a.y1 + b.y0) / 2, ci.HEIGHT - 1.0), "grooves run into each other"
+
+
+def test_a_finger_trough_crosses_the_grooves_so_items_can_be_lifted():
+    m, shelf = HALVES["left"], LEFT["pen_shelf"]
+    under = ci.HEIGHT - ci.GROOVE_DEPTH - 2.0
+    for _, g in ci.grooves():
+        assert not _solid(m, shelf.cx, g.cy, under), "no trough under the middle of a groove"
+    assert _solid(m, shelf.cx, shelf.cy, ci.FLOOR / 2), "the trough went through the floor"
+
+
+# --- batteries ---------------------------------------------------------------
+
+@pytest.mark.parametrize("kind, cell", [("aa", ci.AA), ("aaa", ci.AAA)])
+def test_four_battery_slots_each_holding_one_cell_below_the_top(kind, cell):
+    slots = ci.battery_slots(kind)
+    length, dia = cell
+    assert len(slots) == 4
+    for s in slots:
+        assert s.d >= length + 1.0, "cell does not lie in the slot"
+        assert s.w >= dia + 1.0, "slot too narrow for the cell"
+        assert ci.slot_depth(kind) >= dia, "cell pokes out of its slot"
+    region = LEFT[kind]
+    assert all(region.x0 <= s.x0 and s.x1 <= region.x1 and region.y0 <= s.y0 and s.y1 <= region.y1
+               for s in slots), "a slot is outside its region"
+
+
+@pytest.mark.parametrize("kind", ["aa", "aaa"])
+def test_battery_slots_are_separate_and_raised(kind):
+    m = HALVES["left"]
+    slots = ci.battery_slots(kind)
+    bottom = ci.HEIGHT - ci.slot_depth(kind)
+    y = slots[0].y0 + 3.0                     # clear of the finger trough
+    for s in slots:
+        assert not _solid(m, s.cx, y, bottom + 0.8)
+        assert _solid(m, s.cx, y, bottom - 0.5), "slot has no raised floor"
+    for a, b in zip(slots, slots[1:]):
+        assert _solid(m, (a.x1 + b.x0) / 2, y, ci.HEIGHT - 1.0), "slots run into each other"
+
+
+@pytest.mark.parametrize("kind", ["aa", "aaa"])
+def test_a_finger_trough_crosses_the_battery_slots(kind):
+    m = HALVES["left"]
+    s = ci.battery_slots(kind)[0]
+    assert not _solid(m, s.cx, s.cy, ci.HEIGHT - ci.slot_depth(kind) - 2.0)
+
+
+# --- coins -----------------------------------------------------------------
+
+def test_the_coin_cup_is_scooped_with_a_flat_middle():
+    m, bay = HALVES["left"], LEFT["coins"]
+    corner = ci.FLOOR + 1.0
+    assert _solid(m, bay.cx, bay.y0 + 1.0, corner), "front edge of the coin cup is square"
+    assert _solid(m, bay.cx, bay.y1 - 1.0, corner), "back edge of the coin cup is square"
+    assert not _solid(m, bay.cx, bay.cy, corner), "the coin cup has no flat middle"
+    assert bay.d - 2 * ci.COIN_SCOOP_R >= 10.0, "coins would lie tilted"
+
+
+# --- cards -----------------------------------------------------------------
+
+def test_the_card_pocket_takes_ten_cards_lying_flat():
+    bay = RIGHT["cards"]
+    assert bay.w >= ci.CARD[0] + 4.0 and bay.d >= ci.CARD[1] + 4.0
+    assert ci.CARD_POCKET_DEPTH >= ci.CARD_STACK + 2.0
+
+
+def test_the_card_pocket_has_a_raised_floor():
+    m, bay = HALVES["right"], RIGHT["cards"]
+    deck = ci.HEIGHT - ci.CARD_POCKET_DEPTH
+    assert _solid(m, bay.cx, bay.cy, deck - 1.0), "card pocket floor is not raised"
+    assert not _solid(m, bay.cx, bay.cy, deck + 1.0), "card pocket is not open above its floor"
+
+
+def test_the_finger_dips_reach_under_the_card_ends():
+    m, bay = HALVES["right"], RIGHT["cards"]
+    room = (bay.w - ci.CARD[0]) / 2
+    z = ci.HEIGHT - ci.CARD_POCKET_DEPTH - 1.0
+    for x in (bay.x0 + room + 3.0, bay.x1 - room - 3.0):
+        assert not _solid(m, x, bay.cy, z), f"no finger dip under the card end at x={x:.1f}"
+    assert _solid(m, bay.cx, bay.cy, z), "the dips have eaten the whole floor"
+    x = bay.x0 + 3.0
+    assert _solid(m, x, bay.cy, z - ci.FINGER_DIP_DEPTH), "dip goes deeper than planned"
+
+
+# --- key fobs ----------------------------------------------------------------
 
 def test_both_fobs_fit_end_to_end_with_finger_room_beside_them():
-    bay = ci.bays("right")["fobs"]
+    bay = RIGHT["fobs"]
     assert ci.FOB_BIG[0] + ci.FOB_SMALL[0] <= bay.d
     assert (bay.w - ci.FOB_BIG[1]) / 2 >= 10.0
     assert (bay.w - ci.FOB_SMALL[1]) / 2 >= 10.0
 
 
 def test_the_fob_lane_has_no_divider():
-    m, bay = HALVES["right"], ci.bays("right")["fobs"]
+    m, bay = HALVES["right"], RIGHT["fobs"]
     for y in range(int(bay.y0) + 2, int(bay.y1) - 1, 5):
         assert not _solid(m, bay.cx, y, ci.HEIGHT / 2), f"something blocks the lane at y={y}"
 
 
-@pytest.mark.parametrize("name, cell", [("aa", "AA"), ("aaa", "AAA")])
-def test_batteries_lie_flat_in_their_bay(name, cell):
-    bay = ci.bays("left")[name]
-    length, dia = getattr(ci, cell)
-    assert length < bay.d, f"{cell} does not lie front to back"
-    nested_two_layers = dia + dia * math.sin(math.radians(60))
-    assert ci.FLOOR + nested_two_layers < ci.HEIGHT, f"a second layer of {cell} sticks out"
-
-
-def test_three_full_length_channels_one_for_the_letter_opener():
-    """Pens, screwdrivers and the letter opener: three channels the same size."""
-    channels = [ci.bays("left")[n] for n in ("pens_front", "pens_middle", "pens_back")]
-    for bay in channels:
-        assert bay.w >= ci.LONGEST_TOOL
-        assert math.isclose(bay.d, ci.PEN_CHANNEL, abs_tol=0.01)
-
-
-def test_the_right_halfs_divider_lines_up_with_the_left_halfs():
-    left, right = HALVES["left"], HALVES["right"]
-    wall_y = ci.bays("left")["pens_middle"].y1 + ci.WALL / 2
-    z = ci.HEIGHT - 1.0          # above the badge's raised floor: only a wall is solid here
-    assert _solid(left, ci.HALF_W / 2, wall_y, z)
-    usb = ci.bays("right")["usb"]
-    assert _solid(right, usb.cx, wall_y, z), "right half's wall is not in line"
-    assert math.isclose(usb.y1, ci.bays("left")["pens_middle"].y1, abs_tol=0.01)
-
-
-# --- the shaped bays ---------------------------------------------------------
-
-def test_the_coin_cup_is_scooped_at_the_front_and_back_edges():
-    m, bay = HALVES["left"], ci.bays("left")["coins"]
-    corner = ci.FLOOR + 1.0
-    assert _solid(m, bay.cx, bay.y0 + 1.0, corner), "front edge of the coin cup is square"
-    assert _solid(m, bay.cx, bay.y1 - 1.0, corner), "back edge of the coin cup is square"
-    assert not _solid(m, bay.cx, bay.cy, corner), "the coin cup has no flat middle"
-    flat = bay.d - 2 * ci.COIN_SCOOP_R
-    assert flat >= 10.0, f"only {flat:.1f} mm of flat floor -- coins would lie tilted"
-
-
-def test_the_badge_sits_on_a_raised_floor_near_the_top():
-    m, bay = HALVES["right"], ci.bays("right")["badge"]
-    deck = ci.HEIGHT - ci.BADGE_POCKET_DEPTH
-    assert _solid(m, bay.cx, bay.cy, deck - 1.0), "badge pocket floor is not raised"
-    assert not _solid(m, bay.cx, bay.cy, deck + 1.0), "badge pocket is not open above its floor"
-
-
-def test_bays_refuses_an_unknown_side():
-    with pytest.raises(ValueError):
-        ci.bays("middle")
-
-
-def test_the_finger_dips_reach_under_the_badge_edge():
-    m, bay = HALVES["right"], ci.bays("right")["badge"]
-    room = (bay.w - ci.BADGE[1]) / 2
-    z = ci.HEIGHT - ci.BADGE_POCKET_DEPTH - 1.0
-    for x in (bay.x0 + room + 1.0, bay.x1 - room - 1.0):
-        assert not _solid(m, x, bay.cy, z), f"no finger dip under the badge at x={x:.1f}"
-    assert _solid(m, bay.cx, bay.cy, z), "the dips have eaten the whole floor"
-
-
-def test_the_finger_dips_stop_short_of_the_base():
-    """Deep enough for a fingertip, not a well that swallows coins and crumbs."""
-    m, bay = HALVES["right"], ci.bays("right")["badge"]
-    deck = ci.HEIGHT - ci.BADGE_POCKET_DEPTH
-    x = bay.x0 + 3.0
-    assert not _solid(m, x, bay.cy, deck - ci.FINGER_DIP_DEPTH + 0.5)
-    assert _solid(m, x, bay.cy, deck - ci.FINGER_DIP_DEPTH - 0.5), "dip goes deeper than planned"
-
-
-# --- fit-test outlines -------------------------------------------------------
+# --- the prints for checking before the real one ---------------------------
 
 @pytest.mark.parametrize("side", SIDES)
 def test_the_fit_test_is_a_short_floorless_outline_of_the_same_footprint(side):
@@ -225,6 +288,19 @@ def test_the_fit_test_is_a_short_floorless_outline_of_the_same_footprint(side):
     assert t.is_watertight and t.body_count == 1
     for bay in ci.bays(side).values():
         assert not _solid(t, bay.cx, bay.cy, ci.FLOOR / 2), "fit test has a floor"
+
+
+def test_the_groove_strip_is_a_short_slice_of_the_real_pen_shelf():
+    """Prints in minutes; every pen and screwdriver can be tried in its groove."""
+    w, d, h = STRIP.extents
+    assert math.isclose(w, ci.STRIP_L, abs_tol=0.02)
+    assert d >= LEFT["pen_shelf"].y1 and math.isclose(h, ci.HEIGHT, abs_tol=0.02)
+    assert STRIP.is_watertight and STRIP.body_count == 1
+    x = STRIP.bounds[0][0] + ci.STRIP_L / 2
+    for name, g in ci.grooves():
+        bottom = ci.HEIGHT - ci.GROOVE_DEPTH
+        assert not _solid(STRIP, x, g.cy, bottom + 0.8), f"{name} groove missing from the strip"
+        assert _solid(STRIP, x, g.cy, bottom - 0.5), f"{name} groove in the strip has no floor"
 
 
 def test_the_preview_is_written_as_a_png(tmp_path):
