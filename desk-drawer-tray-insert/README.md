@@ -30,7 +30,7 @@ fit, because the half is about 3 mm longer than the tray is deep.
 | `test_create_insert.py` | Fit, printability and "does the item fit its bay" invariants |
 | `desk-drawer-tray-insert-left.stl` / `-right.stl` | The two halves |
 | `desk-drawer-tray-insert-fit-test-left.stl` / `-right.stl` | 3 mm tall floorless outlines for a fit check |
-| `desk-drawer-tray-insert-groove-test.stl` | A 25 mm slice of the pen shelf, to try each pen and screwdriver in its groove |
+| `desk-drawer-tray-insert-groove-test.stl` | A 100 mm slice of the pen shelf, to try each pen and screwdriver in its groove |
 | `preview-layout.png` | Top view sliced from the generated model |
 
 ```bash

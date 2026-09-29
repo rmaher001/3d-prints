@@ -16,7 +16,7 @@ them together. Front is -Y (the side nearest you with the drawer open).
 Outputs (next to this script):
   desk-drawer-tray-insert-left.stl / -right.stl        the halves
   desk-drawer-tray-insert-fit-test-left.stl / -right   3 mm floorless outlines
-  desk-drawer-tray-insert-groove-test.stl              a 25 mm slice of the pen shelf
+  desk-drawer-tray-insert-groove-test.stl              one 100 mm groove of the pen shelf
   preview-layout.png                                   top view of both halves
 
 Usage:  ../tools/venv/bin/python create_insert.py
@@ -82,7 +82,7 @@ CARD_POCKET_D = 60.0                # front to back
 CARD_POCKET_DEPTH = 14.0            # the cards sit on a raised floor this far down
 FINGER_DIP_R = 12.0                 # reaches ~9 mm under each end of the stack
 FINGER_DIP_DEPTH = 8.0              # below the raised floor: a fingertip, not a well
-STRIP_X0, STRIP_L = 6.0, 25.0       # the groove test strip, cut from the left half
+STRIP_X0, STRIP_L = 6.0, 100.0      # the groove test strip, cut from the left half
 
 
 class Bay(NamedTuple):
@@ -228,10 +228,10 @@ def build_half(side, fit_test=False):
 
 
 def build_groove_strip():
-    """A 25 mm slice across the pen shelf, to try every pen and screwdriver."""
-    shelf = bays("left")["pen_shelf"]
-    keep = centered_box(STRIP_L, shelf.y1 + WALL, HEIGHT + 2,
-                        (STRIP_X0 + STRIP_L / 2, (shelf.y1 + WALL) / 2, HEIGHT / 2))
+    """One 100 mm groove of the pen shelf; every round groove is the same, so it tries every item."""
+    depth = grooves()[0][1].y1 + RIDGE
+    keep = centered_box(STRIP_L, depth, HEIGHT + 2,
+                        (STRIP_X0 + STRIP_L / 2, depth / 2, HEIGHT / 2))
     mesh = from_manifold(to_manifold(build_half("left")) ^ to_manifold(keep))
     mesh.merge_vertices()
     return mesh
