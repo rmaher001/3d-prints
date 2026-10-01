@@ -32,9 +32,7 @@ the half is about 3 mm longer than the tray is deep.
 | `create_insert.py` | Generator: every dimension is a named constant at the top |
 | `test_create_insert.py` | Fit, printability and "does the item fit its bay" invariants |
 | `desk-drawer-tray-insert-left.stl` / `-right.stl` | The two halves |
-| `desk-drawer-tray-insert-fit-test-left.stl` / `-right.stl` | 3 mm tall floorless outlines for a fit check |
-| `desk-drawer-tray-insert-groove-test.stl` | One 100 mm groove of the pen shelf, to try each pen and screwdriver |
-| `desk-drawer-tray-insert-width-test-trim-1.0.stl` / `-1.5` / `-2.0` | The front 1 inch of the real right half at three widths (182.25, 181.75, 181.25 mm), full height, to find the width that drops into the tray; `desk-drawer-tray-insert-width-test.stl` is the current one |
+| *test prints* | `create_insert.py` also writes 3 mm fit-test outlines, a one-groove strip and full-height width-test slices next to itself. They are not kept in the repo (git ignores them); regenerate them with the command below |
 | `preview-layout.png` | Top view sliced from the generated model |
 
 ```bash
